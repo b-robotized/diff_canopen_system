@@ -131,7 +131,7 @@ hardware_interface::return_type DiffCanopenSystem::write()
     // tpdo data one shot mechanism
     if (it->second.tpdo_data.write_command())
     {
-      // TODO(): Convert percents command to speed data
+      // Convert percents command to speed data
       it->second.tpdo_data.data = convert_percentage_to_speed_value(it->second.tpdo_data.data);
       it->second.tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
@@ -167,10 +167,10 @@ void DiffCanopenSystem::send_motor_battery_request() {
   {
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[it->first]);
 
-    // tpdo data one shot mechanism
+    // Generate data request
     if (it->second.tpdo_data.write_command())
     {
-      // TODO(): Convert percents command to speed data
+      // TODO(): Finish the data for request
       it->second.tpdo_data.original_data.index_ = 0x2A6;
       it->second.tpdo_data.original_data.subindex_ = 0;
       // it->second.tpdo_data.original_data.type_ = 0;
@@ -196,10 +196,10 @@ void DiffCanopenSystem::send_error_status_request() {
   {
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[it->first]);
 
-    // tpdo data one shot mechanism
+    // Generate data request
     if (it->second.tpdo_data.write_command())
     {
-      // TODO(): Convert percents command to speed data
+      // TODO(): Finish the data for request
       it->second.tpdo_data.original_data.index_ = 0x1A6;
       it->second.tpdo_data.original_data.subindex_ = 0;
       // it->second.tpdo_data.original_data.type_ = 0;
@@ -227,10 +227,10 @@ void DiffCanopenSystem::send_motor_status_request() {
   {
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[it->first]);
 
-    // tpdo data one shot mechanism
+    // Generate data request
     if (it->second.tpdo_data.write_command())
     {
-      // TODO(): Convert percents command to speed data
+      // TODO(): Finish the data for request
       it->second.tpdo_data.original_data.index_ = 0x3A6;
       it->second.tpdo_data.original_data.subindex_ = 0;
       // it->second.tpdo_data.original_data.type_ = 0;
@@ -255,8 +255,7 @@ hardware_interface::return_type DiffCanopenSystem::read_motor_battery_states()
   send_motor_battery_request();
   auto ret_val = CanopenSystem::read();
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
-    // TODO(Xi): READ rpdo data
-    // hw_states_[it->first] = it->second->rpdo_data.data; 
+
     std::cout << "This is a debug message in read_motor_battery_states()....." << std::endl;
     std::cout << "Iterator: " << it->first << std::endl;
     std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
@@ -265,7 +264,7 @@ hardware_interface::return_type DiffCanopenSystem::read_motor_battery_states()
     std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
     std::cout << "--- END of the debug message in read_motor_battery_states()" << std::endl;
 
-    // TODO: Get data
+    // TODO(): Concert the RPDO data to motor battery state
     wheel_states_[it->first].motor_battery_state = 0;
   }
   return ret_val;
@@ -276,8 +275,7 @@ hardware_interface::return_type DiffCanopenSystem::read_error_status()
   send_error_status_request();
   auto ret_val = CanopenSystem::read();
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
-    // TODO(Xi): READ rpdo data
-    // hw_states_[it->first] = it->second->rpdo_data.data; 
+
     std::cout << "This is a debug message in read_error_status_request()....." << std::endl;
     std::cout << "Iterator: " << it->first << std::endl;
     std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
@@ -286,7 +284,9 @@ hardware_interface::return_type DiffCanopenSystem::read_error_status()
     std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
     std::cout << "--- END of the debug message in read_error_status_request()" << std::endl;
 
-    // TODO(): Get data
+    // TODO(): Concert the RPDO data to error status
+    // Error status via (T)PDO eg. 1A6# xx yy zz aa bb cc dd ee ff  or 1A7#xx yy zz aa bb ..  
+    // (xx, yy, zz,... =each Byte is one error flag)
     wheel_states_[it->first].error_status = 0;
   }
   return ret_val;
@@ -297,8 +297,7 @@ hardware_interface::return_type DiffCanopenSystem::read_motor_status()
   send_motor_status_request();
   auto ret_val = CanopenSystem::read();
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
-    // TODO(Xi): READ rpdo data
-    // hw_states_[it->first] = it->second->rpdo_data.data; 
+
     std::cout << "This is a debug message in read_motor_status_request()....." << std::endl;
     std::cout << "Iterator: " << it->first << std::endl;
     std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
@@ -307,34 +306,15 @@ hardware_interface::return_type DiffCanopenSystem::read_motor_status()
     std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
     std::cout << "--- END of the debug message in read_motor_status_request()" << std::endl;
 
-    // TODO(): Get data
+    // TODO(): Convert the data from RPDO
+    // Motor status via (T)PDO eg 3A6# XX XX YY  YY ZZ ZZ ZZ 00 
+    // ( XX XX= Motor RPM; YY YY = temperatur, ZZ ZZ ZZ= Motor Power
     wheel_states_[it->first].velocity_state = convert_rpm_to_rads(0);
     wheel_states_[it->first].motor_temperature = 0;
     wheel_states_[it->first].motor_power = 0;
   }
   return ret_val;
 }
-
-// hardware_interface::return_type DiffCanopenSystem::read_velocty_state()
-// {
-//   auto ret_val = CanopenSystem::read();
-//   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
-//     // TODO(Xi): READ rpdo data
-//     // hw_states_[it->first] = it->second->rpdo_data.data; 
-//     std::cout << "This is a debug message in read_velocty_state()....." << std::endl;
-//     std::cout << "Iterator: " << it->first << std::endl;
-//     std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
-//     std::cout << "Subindex: " << it->second.rpdo_data.subindex << std::endl;
-//     std::cout << "Data:     " << it->second.rpdo_data.data << std::endl;
-//     std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
-//     std::cout << "--- END of the debug message in read_velocty_state()" << std::endl;
-
-//     // TODO(): Get data
-//     wheel_states_[it->first].velocity_state = convert_rpm_to_rads(0);
-//   }
-//   return ret_val;
-// }
-
 
 }  // namespace diff_canopen_system
 

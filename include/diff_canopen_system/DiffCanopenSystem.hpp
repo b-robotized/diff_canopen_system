@@ -78,10 +78,9 @@ private:
   hardware_interface::return_type read_motor_battery_states();
   hardware_interface::return_type read_error_status();
   hardware_interface::return_type read_motor_status();
-  // hardware_interface::return_type read_velocty_state();
 
   // States
-  std::map<uint, WheelState> wheel_states_;
+  std::unordered_map<uint, WheelState> wheel_states_;
 };
 
 }  // namespace diff_canopen_system
