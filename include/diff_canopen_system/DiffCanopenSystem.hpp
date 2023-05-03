@@ -33,7 +33,7 @@ namespace diff_canopen_system
 
 struct WheelState {
   // Read only
-  double velcocity_state;
+  double velocity_state;
   double motor_temperature;
   double motor_power;
   double motor_battery_state;
@@ -78,7 +78,7 @@ private:
   hardware_interface::return_type read_motor_battery_states();
   hardware_interface::return_type read_error_status();
   hardware_interface::return_type read_motor_status();
-  hardware_interface::return_type read_velocty_state();
+  // hardware_interface::return_type read_velocty_state();
 
   // States
   std::map<uint, WheelState> wheel_states_;

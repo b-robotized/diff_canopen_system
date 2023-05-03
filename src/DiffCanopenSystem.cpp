@@ -48,7 +48,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
 
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, "velocity", &wheel_states_[node_id].velcocity_state));
+      info_.joints[i].name, "velocity", &wheel_states_[node_id].velocity_state));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, "motor_tempreture", &wheel_states_[node_id].motor_temperature));
@@ -92,11 +92,11 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 
 hardware_interface::return_type DiffCanopenSystem::read()
 {
-  auto ret_val = read_velocty_state();
+  // auto ret_val = read_velocty_state();
   
   // TODO: Send data to get states...
   send_motor_battery_request();
-  auto ret_val_1 = read_motor_battery_states();
+  auto ret_val = read_motor_battery_states();
 
   send_motor_status_request();
   auto ret_val_2 = read_error_status();
@@ -104,7 +104,7 @@ hardware_interface::return_type DiffCanopenSystem::read()
   send_error_status_request();
   auto ret_val_3 = read_motor_status();
 
-  return ret_val;
+  return ret_val_1;
 }
 
 hardware_interface::return_type DiffCanopenSystem::write()
@@ -308,32 +308,32 @@ hardware_interface::return_type DiffCanopenSystem::read_motor_status()
     std::cout << "--- END of the debug message in read_motor_status_request()" << std::endl;
 
     // TODO(): Get data
-    wheel_states_[it->first].velcocity_state = convert_rpm_to_rads(0);
+    wheel_states_[it->first].velocity_state = convert_rpm_to_rads(0);
     wheel_states_[it->first].motor_temperature = 0;
     wheel_states_[it->first].motor_power = 0;
   }
   return ret_val;
 }
 
-hardware_interface::return_type DiffCanopenSystem::read_velocty_state()
-{
-  auto ret_val = CanopenSystem::read();
-  for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
-    // TODO(Xi): READ rpdo data
-    // hw_states_[it->first] = it->second->rpdo_data.data; 
-    std::cout << "This is a debug message in read_velocty_state()....." << std::endl;
-    std::cout << "Iterator: " << it->first << std::endl;
-    std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
-    std::cout << "Subindex: " << it->second.rpdo_data.subindex << std::endl;
-    std::cout << "Data:     " << it->second.rpdo_data.data << std::endl;
-    std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
-    std::cout << "--- END of the debug message in read_velocty_state()" << std::endl;
+// hardware_interface::return_type DiffCanopenSystem::read_velocty_state()
+// {
+//   auto ret_val = CanopenSystem::read();
+//   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
+//     // TODO(Xi): READ rpdo data
+//     // hw_states_[it->first] = it->second->rpdo_data.data; 
+//     std::cout << "This is a debug message in read_velocty_state()....." << std::endl;
+//     std::cout << "Iterator: " << it->first << std::endl;
+//     std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
+//     std::cout << "Subindex: " << it->second.rpdo_data.subindex << std::endl;
+//     std::cout << "Data:     " << it->second.rpdo_data.data << std::endl;
+//     std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
+//     std::cout << "--- END of the debug message in read_velocty_state()" << std::endl;
 
-    // TODO(): Get data
-    wheel_states_[it->first].velcocity_state = convert_rpm_to_rads(0);
-  }
-  return ret_val;
-}
+//     // TODO(): Get data
+//     wheel_states_[it->first].velocity_state = convert_rpm_to_rads(0);
+//   }
+//   return ret_val;
+// }
 
 
 }  // namespace diff_canopen_system
