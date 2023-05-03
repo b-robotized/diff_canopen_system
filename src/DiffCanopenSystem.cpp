@@ -104,7 +104,7 @@ hardware_interface::return_type DiffCanopenSystem::read()
   send_error_status_request();
   auto ret_val_3 = read_motor_status();
 
-  return ret_val_1;
+  return ret_val;
 }
 
 hardware_interface::return_type DiffCanopenSystem::write()
