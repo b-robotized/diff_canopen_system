@@ -38,7 +38,7 @@ struct WheelState {
   double motor_temperature;
   double motor_power;
   double motor_battery_state;
-  uint64_t error_status; 
+  double error_status; 
 
   // Write only
   double velocity_command;

@@ -26,19 +26,15 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
 {
   auto init_rval = CanopenSystem::on_init(info);
 
-  // TODO(anyone): read parameters and initialize the hardware
-  hw_states_.resize(info_.joints.size() + info_.sensors.size(), std::numeric_limits<double>::quiet_NaN());
-  hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-
   return init_rval;
 }
 
 std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_interfaces()
 {
   // underlying base class export first
+  std::vector<hardware_interface::StateInterface> state_interfaces;
   state_interfaces = CanopenSystem::export_state_interfaces();
   
-  std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++)
   {
     if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
@@ -53,10 +49,10 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
 
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, "velocity", &wheel_states_[node_id].velcocity));
+      info_.joints[i].name, "velocity", &wheel_states_[node_id].velcocity_state));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, "motor_tempreture", &wheel_states_[node_id].motor_tempreture));
+      info_.joints[i].name, "motor_tempreture", &wheel_states_[node_id].motor_temperature));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, "motor_power", &wheel_states_[node_id].motor_power));
