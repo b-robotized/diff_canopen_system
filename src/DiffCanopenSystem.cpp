@@ -53,7 +53,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
 
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, "velocity", &wheel_states_[node_id].velocity_state));
+      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &wheel_states_[node_id].velocity_state));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, "motor_tempreture", &wheel_states_[node_id].motor_temperature));
