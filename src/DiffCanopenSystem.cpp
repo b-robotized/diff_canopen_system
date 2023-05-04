@@ -18,6 +18,11 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+namespace
+{
+auto const kLogger = rclcpp::get_logger("DiffCanopenSystem");
+}
+
 namespace diff_canopen_system
 {
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystem::on_init(
@@ -92,8 +97,7 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 
 hardware_interface::return_type DiffCanopenSystem::read()
 {
-  // auto ret_val = read_velocty_state();
-  
+ 
   // TODO: Send data to get states...
   send_motor_battery_request();
   auto ret_val = read_motor_battery_states();
@@ -136,13 +140,14 @@ hardware_interface::return_type DiffCanopenSystem::write()
       it->second.tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
       // Debug Message
-      std::cout << "This is a debug message in HW-write()....." << std::endl;
-      std::cout << "Iterator: " << it->first << std::endl;
-      std::cout << "Index:    " << it->second.tpdo_data.original_data.index_ << std::endl;
-      std::cout << "Subindex: " << it->second.tpdo_data.original_data.subindex_ << std::endl;
-      std::cout << "Data:     " << it->second.tpdo_data.original_data.data_ << std::endl;
-      std::cout << "Type:     " << it->second.tpdo_data.original_data.type_ << std::endl;
-      std::cout << "--- END of the debug message in HW-write()" << std::endl;
+      RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
+      RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u \n Type:     %i",
+      it->first,
+      it->second.tpdo_data.original_data.index_,
+      it->second.tpdo_data.original_data.subindex_,
+      it->second.tpdo_data.original_data.data_, 
+      it->second.tpdo_data.original_data.type_);
+      RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
     }
   }
 
@@ -179,13 +184,14 @@ void DiffCanopenSystem::send_motor_battery_request() {
       // it->second.tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
       // Debug Message
-      std::cout << "This is a debug message in HW-write()....." << std::endl;
-      std::cout << "Iterator: " << it->first << std::endl;
-      std::cout << "Index:    " << it->second.tpdo_data.original_data.index_ << std::endl;
-      std::cout << "Subindex: " << it->second.tpdo_data.original_data.subindex_ << std::endl;
-      std::cout << "Data:     " << it->second.tpdo_data.original_data.data_ << std::endl;
-      std::cout << "Type:     " << it->second.tpdo_data.original_data.type_ << std::endl;
-      std::cout << "--- END of the debug message in HW-write()" << std::endl;
+      RCLCPP_INFO(kLogger, "This is a debug message in send_motor_battery_request().....");
+      RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u \n Type:     %i",
+      it->first,
+      it->second.tpdo_data.original_data.index_,
+      it->second.tpdo_data.original_data.subindex_,
+      it->second.tpdo_data.original_data.data_, 
+      it->second.tpdo_data.original_data.type_);
+      RCLCPP_INFO(kLogger, "--- END of the debug message in send_motor_battery_request()");
     }
   }
 }
@@ -208,13 +214,14 @@ void DiffCanopenSystem::send_error_status_request() {
       // it->second.tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
       // Debug Message
-      std::cout << "This is a debug message in HW-write()....." << std::endl;
-      std::cout << "Iterator: " << it->first << std::endl;
-      std::cout << "Index:    " << it->second.tpdo_data.original_data.index_ << std::endl;
-      std::cout << "Subindex: " << it->second.tpdo_data.original_data.subindex_ << std::endl;
-      std::cout << "Data:     " << it->second.tpdo_data.original_data.data_ << std::endl;
-      std::cout << "Type:     " << it->second.tpdo_data.original_data.type_ << std::endl;
-      std::cout << "--- END of the debug message in HW-write()" << std::endl;
+      RCLCPP_INFO(kLogger, "This is a debug message in send_error_status_request().....");
+      RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u \n Type:     %i",
+      it->first,
+      it->second.tpdo_data.original_data.index_,
+      it->second.tpdo_data.original_data.subindex_,
+      it->second.tpdo_data.original_data.data_, 
+      it->second.tpdo_data.original_data.type_);
+      RCLCPP_INFO(kLogger, "--- END of the debug message in send_error_status_request()");
     }
   }
 }
@@ -239,13 +246,14 @@ void DiffCanopenSystem::send_motor_status_request() {
       // it->second.tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
       // Debug Message
-      std::cout << "This is a debug message in HW-write()....." << std::endl;
-      std::cout << "Iterator: " << it->first << std::endl;
-      std::cout << "Index:    " << it->second.tpdo_data.original_data.index_ << std::endl;
-      std::cout << "Subindex: " << it->second.tpdo_data.original_data.subindex_ << std::endl;
-      std::cout << "Data:     " << it->second.tpdo_data.original_data.data_ << std::endl;
-      std::cout << "Type:     " << it->second.tpdo_data.original_data.type_ << std::endl;
-      std::cout << "--- END of the debug message in HW-write()" << std::endl;
+      RCLCPP_INFO(kLogger, "This is a debug message in send_motor_status_request().....");
+      RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u \n Type:     %i",
+      it->first,
+      it->second.tpdo_data.original_data.index_,
+      it->second.tpdo_data.original_data.subindex_,
+      it->second.tpdo_data.original_data.data_, 
+      it->second.tpdo_data.original_data.type_);
+      RCLCPP_INFO(kLogger, "--- END of the debug message in send_motor_status_request()");
     }
   }
 }
@@ -256,13 +264,14 @@ hardware_interface::return_type DiffCanopenSystem::read_motor_battery_states()
   auto ret_val = CanopenSystem::read();
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
 
-    std::cout << "This is a debug message in read_motor_battery_states()....." << std::endl;
-    std::cout << "Iterator: " << it->first << std::endl;
-    std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
-    std::cout << "Subindex: " << it->second.rpdo_data.subindex << std::endl;
-    std::cout << "Data:     " << it->second.rpdo_data.data << std::endl;
-    std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
-    std::cout << "--- END of the debug message in read_motor_battery_states()" << std::endl;
+    RCLCPP_INFO(kLogger, "This is a debug message in read_motor_battery_states().....");
+    RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %f \n Subindex: %f \n Data:     %f \n Type:     %f",
+    it->first,
+    it->second.rpdo_data.index,
+    it->second.rpdo_data.subindex,
+    it->second.rpdo_data.data, 
+    it->second.rpdo_data.type);
+    RCLCPP_INFO(kLogger, "--- END of the debug message in read_motor_battery_states()");
 
     // TODO(): Concert the RPDO data to motor battery state
     wheel_states_[it->first].motor_battery_state = 0;
@@ -276,13 +285,14 @@ hardware_interface::return_type DiffCanopenSystem::read_error_status()
   auto ret_val = CanopenSystem::read();
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
 
-    std::cout << "This is a debug message in read_error_status_request()....." << std::endl;
-    std::cout << "Iterator: " << it->first << std::endl;
-    std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
-    std::cout << "Subindex: " << it->second.rpdo_data.subindex << std::endl;
-    std::cout << "Data:     " << it->second.rpdo_data.data << std::endl;
-    std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
-    std::cout << "--- END of the debug message in read_error_status_request()" << std::endl;
+    RCLCPP_INFO(kLogger, "This is a debug message in read_error_status().....");
+    RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %f \n Subindex: %f \n Data:     %f \n Type:     %f",
+    it->first,
+    it->second.rpdo_data.index,
+    it->second.rpdo_data.subindex,
+    it->second.rpdo_data.data, 
+    it->second.rpdo_data.type);
+    RCLCPP_INFO(kLogger, "--- END of the debug message in read_error_status()");
 
     // TODO(): Concert the RPDO data to error status
     // Error status via (T)PDO eg. 1A6# xx yy zz aa bb cc dd ee ff  or 1A7#xx yy zz aa bb ..  
@@ -298,13 +308,14 @@ hardware_interface::return_type DiffCanopenSystem::read_motor_status()
   auto ret_val = CanopenSystem::read();
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it) {
 
-    std::cout << "This is a debug message in read_motor_status_request()....." << std::endl;
-    std::cout << "Iterator: " << it->first << std::endl;
-    std::cout << "Index:    " << it->second.rpdo_data.index << std::endl;
-    std::cout << "Subindex: " << it->second.rpdo_data.subindex << std::endl;
-    std::cout << "Data:     " << it->second.rpdo_data.data << std::endl;
-    std::cout << "Type:     " << it->second.rpdo_data.type << std::endl;
-    std::cout << "--- END of the debug message in read_motor_status_request()" << std::endl;
+    RCLCPP_INFO(kLogger, "This is a debug message in read_motor_status().....");
+    RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %f \n Subindex: %f \n Data:     %f \n Type:     %f",
+    it->first,
+    it->second.rpdo_data.index,
+    it->second.rpdo_data.subindex,
+    it->second.rpdo_data.data, 
+    it->second.rpdo_data.type);
+    RCLCPP_INFO(kLogger, "--- END of the debug message in read_motor_status()");
 
     // TODO(): Convert the data from RPDO
     // Motor status via (T)PDO eg 3A6# XX XX YY  YY ZZ ZZ ZZ 00 
