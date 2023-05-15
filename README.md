@@ -1,20 +1,5 @@
 # diff_canopen_system
 
-To bring up the system, we need to be aware of these things
-1. Currently, we prepared the request message to get the motor status. We have to put the proper index and data to request for the states. Look up for
-these functions:
-- send_motor_status_request
-- send_error_status_request
-- send_motor_battery_request
-
-2. After we sent the request, the could data via RPDO. However, the recieved data is not processed. For example, after we get the data from motor status,
-we have to split them into RPM, power and temperature and write them to the state interface. 
-Currently, the code recieves the data, but put only dummy numbers into the state interface after the recieval.
-Look up the following functions to make the convertion complete:
-- read_motor_status
-- read_error_status
-- read_motor_battery_states
-
 How to develop a CiA301 profile yourself:
 
 There are two component you have to take care of: hardware_interface and controller.
@@ -26,7 +11,8 @@ For hardware_interface, we will extend a child class from the CanOpenSystem (ToD
 - read(): read from the hardware or request the hardware to send back the state (via RPDO)
 - write(): write command to the hardware (via TPDO)
 
-Configuration: (ToDo)
+Configuration:
+- plugin export xml: define the name(for including) and the type(for using) of this hardware interface
 
 
 For the contollers, you should extend the controller AND provide with proper configuration and urdf.
@@ -34,11 +20,30 @@ The controller can be a child class of canopen_ros2_controllers::CanopenProxyCon
 - command_interface_configuration
 - state_interface_configuration
 
-Configuration: (ToDo)
 
+Configuration: (ToDo: Do we need example for this?)
+- urdf
+    - *.urdf.xacro
+        - Include configuration for bus, master and can interface for ros2_control
+        - Define the link and joints as usual
+    - *.ros_control.xacro
+        - Claim the hardware using the parameter defined in the urdf.xacro
+        - Assign the controllers proper can node_id
+- ros2_control config
+    - controller manager: define cantroller names and their types
+    - controller: define parameters you need to initialize the controllers
+    - bus: define master and slaves
+        - master: node id, driver type, package
+        - slaves: node id, dcf, driver and packages
+- can interface: define command and state interface
+
+---
+(ToDo)
 How does the controller connect with the hardware interface? How are the states and the commands transferred?
 
 We have registered the command and state interfaces in the hardware interface. By claiming the same resources in the controller, the controller is able to read data and write command. We should be aware of the indices we use.
+
+The hardware interface connects to the can device driver. While the hardware interface gets the new states from the hardware, the state interface will update its states at the same time. The controller registered to the same state interface has access to the new states as well. Similarly, as the controller set a target command, the hardware interface can get this updated command via the registered command interface and forward the command to hardware.
 
 https://github.com/ros-industrial/ros2_canopen/blob/master/canopen_ros2_controllers/src/canopen_proxy_controller.cpp
 
