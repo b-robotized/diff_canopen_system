@@ -6,10 +6,10 @@ There are two component you have to take care of: hardware_interface and control
 https://github.com/StoglRobotics/diff_canopen_system/blob/master/src/DiffCanopenSystem.cpp
 
 For hardware_interface, we will extend a child class from the CanOpenSystem (ToDo: check the name). The important part here is to prepare the following functions:
-- export_state_interfaces: register the state you want to read from the hardware and associate the variables to them
-- export_command_interfaces: register the command you want to sent to the hardware
-- read(): read from the hardware or request the hardware to send back the state (via RPDO)
-- write(): write command to the hardware (via TPDO)
+- `export_state_interfaces()`: register the state you want to read from the hardware and associate the variables to them
+- `export_command_interfaces()`: register the command you want to sent to the hardware
+- `read()`: read from the hardware or request the hardware to send back the state (via RPDO)
+- `write()`: write command to the hardware (via TPDO)
 
 Configuration:
 - plugin export xml: define the name(for including) and the type(for using) of this hardware interface
@@ -23,10 +23,10 @@ The controller can be a child class of canopen_ros2_controllers::CanopenProxyCon
 
 Configuration: (ToDo: Do we need example for this?)
 - urdf
-    - *.urdf.xacro
+    - `*.urdf.xacro`
         - Include configuration for bus, master and can interface for ros2_control
         - Define the link and joints as usual
-    - *.ros_control.xacro
+    - `*.ros_control.xacro`
         - Claim the hardware using the parameter defined in the urdf.xacro
         - Assign the controllers proper can node_id
 - ros2_control config
