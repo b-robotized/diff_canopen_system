@@ -31,9 +31,30 @@
 namespace diff_canopen_system
 {
 
+enum CommandInterfaces
+{
+  VELOCITY_REFERENCE,
+  NMT_RESET,
+  NMT_RESET_FBK,
+  NMT_START,
+  NMT_START_FBK,
+};
+
+enum StateInterfaces
+{
+  VELOCITY_REF,
+  VELOCITY_FEEDBACK,
+  MOTOR_TEMPERATURE,
+  MOTOR_POWER,
+  BATTERY_STATE,
+  ERROR_STATUS,
+  NMT_STATE,
+};
+
 struct WheelState {
   // Read only
-  double velocity_state;
+  double velocity_reference;
+  double velocity_feedback;
   double motor_temperature;
   double motor_power;
   double motor_battery_state;
@@ -66,18 +87,13 @@ public:
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   hardware_interface::return_type write() override;
 
+protected:
+  // void initDeviceContainer() override;
+
 private:
   // State converter
   uint32_t convert_percentage_to_speed_value(const double);
   double convert_rpm_to_rads(const uint32_t);
-
-  void send_motor_battery_request();
-  void send_error_status_request();
-  void send_motor_status_request();
-
-  hardware_interface::return_type read_motor_battery_states();
-  hardware_interface::return_type read_error_status();
-  hardware_interface::return_type read_motor_status();
 
   // States
   std::unordered_map<uint, WheelState> wheel_states_;
