@@ -55,9 +55,9 @@ class DiffCanopenSystemMultiRPDO : public canopen_ros2_control::CanopenSystem
 {
 public:
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  DiffCanopenSystem();
+  DiffCanopenSystemMultiRPDO();
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  ~DiffCanopenSystem();
+  ~DiffCanopenSystemMultiRPDO();
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
@@ -69,43 +69,52 @@ public:
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  hardware_interface::return_type read() override;
+  hardware_interface::return_type read(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  hardware_interface::return_type write() override;
+  hardware_interface::return_type write(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 protected:
   // void initDeviceContainer() override;
 
 private:
   // This make the std::pair hashable
-  struct pair_hash
-  {
+  struct pair_hash {
     template <class T1, class T2>
-    std::size_t operator () (const std::pair<T1, T2> &pair) const
-    {
-      auto h1 = std::hash<T1>{}(pair.first);
-      auto h2 = std::hash<T2>{}(pair.second); 
+    std::size_t operator () (const std::pair<T1, T2>& pair) const {
+        auto h1 = std::hash<T1>{}(pair.first);
+        auto h2 = 0;
 
-      // Mainly for demonstration purposes, i.e. works but is overly simple
-      // In the real world, use sth. like boost.hash_combine
-      return h1 ^ h2;  
+        // check if T2 is a pair, if so recursively compute hash
+        if constexpr (std::is_same<T2, std::pair<uint16_t, uint8_t>>::value) {
+            h2 = pair_hash{}(pair.second);
+        } else {
+            h2 = std::hash<T2>{}(pair.second);
+        }
+
+        return h1 ^ h2;
     }
-  };
+};
 
   // PDO_Interfaces_Mapping
-  using PDO_INDICES = std::pair<uint16_t, uint8_t>;
-  using RPDO_INDICES_MAPPING = std::unordered_map<PDO_INDICES, StateInterfaces, pair_hash>;
-  using TPDO_INDICES_MAPPING = std::unordered_map<PDO_INDICES, CommandInterfaces, pair_hash>;
-  std::vector<RPDO_INDICES_MAPPING> rpdo_mapping_;
-  std::vector<TPDO_INDICES_MAPPING> tpdo_mapping_;
+  using PDO_INDICES = std::pair<uint16_t, uint8_t>; // Index, Subindex
+  using NODE_PDO_INDICES = std::pair<uint, PDO_INDICES>; // Node_id, PDO_INDICES
+
+  // using RPDO_INDICES_MAPPING = std::unordered_map<PDO_INDICES, StateInterfaces, pair_hash>;
+  // using TPDO_INDICES_MAPPING = std::unordered_map<PDO_INDICES, CommandInterfaces, pair_hash>;
+  // std::unordered_map<unit, RPDO_INDICES_MAPPING> rpdo_mapping_;
+  // std::unordered_map<unit, TPDO_INDICES_MAPPING> tpdo_mapping_;
 
   // States - Read only
-  std::vector<double> position_ro_;
-  std::vector<double> velocity_ro_;
+  std::unordered_map<NODE_PDO_INDICES, double, pair_hash> state_ro_;
+
+  // std::unordered_map<unit, double> position_ro_;
+  // std::unordered_map<unit, double> velocity_ro_;
 
   // Command
-  std::vector<double> velocity_command_; 
+  std::unordered_map<NODE_PDO_INDICES, double, pair_hash> velocity_command_; 
 };
 
 }  // namespace diff_canopen_system

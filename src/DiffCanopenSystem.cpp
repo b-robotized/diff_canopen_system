@@ -173,7 +173,8 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 }
 
 
-hardware_interface::return_type DiffCanopenSystem::read()
+hardware_interface::return_type DiffCanopenSystem::read(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   // Bateriespannung: 3398
   // Sollgeschwindigkeit: 3366
@@ -181,7 +182,8 @@ hardware_interface::return_type DiffCanopenSystem::read()
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type DiffCanopenSystem::write()
+hardware_interface::return_type DiffCanopenSystem::write(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   auto drivers = device_container_->get_registered_drivers();
 

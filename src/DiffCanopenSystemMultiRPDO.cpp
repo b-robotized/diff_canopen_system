@@ -67,10 +67,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::expo
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   // underlying base class export first
-  command_interfaces = CanopenSystem::export_command_interfaces();
-  position_ro_.resize(info_.joints.size());
-  velocity_ro_.resize(info_.joints.size());
-  rpdo_mapping_.resize(info_.joints.size());
+  state_interfaces = CanopenSystem::export_state_interfaces();
 
   for (uint i = 0; i < info_.joints.size(); i++)
   {
@@ -82,32 +79,35 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::expo
 
     const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"]));
 
-    // state
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_POSITION,
-      position_ro_[i]));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
-      velocity_ro_[i]));
-    
     // Mapping
-    const uint16_t position_index = static_cast<uint16_t>(
+    uint16_t position_index = static_cast<uint16_t>(
       std::stoi(info_.joints[i].parameters["position_index"]));
-    const uint8_t position_subindex = static_cast<uint8_t>(
+    uint8_t position_subindex = static_cast<uint8_t>(
       std::stoi(info_.joints[i].parameters["position_subindex"]));
 
-    const uint16_t velocity_index = static_cast<uint16_t>(
+    uint16_t velocity_index = static_cast<uint16_t>(
       std::stoi(info_.joints[i].parameters["velocity_index"]));
-    const uint8_t velocity_subindex = static_cast<uint8_t>(
+    uint8_t velocity_subindex = static_cast<uint8_t>(
       std::stoi(info_.joints[i].parameters["velocity_subindex"]));
     
-    auto position_pdo_indices = std::make_pair<uint16_t, uint8_t>(position_index, position_subindex);
-    auto velocity_pdo_indices = std::make_pair<uint16_t, uint8_t>(velocity_index, velocity_subindex);
+    PDO_INDICES position_pdo_indices(position_index, position_subindex);
+    PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
     
-    PDO_INDICES pdo_mapping;
-    pdo_mapping.emplace(position_pdo_indices, StateInterfaces::POSITION);
-    pdo_mapping.emplace(velocity_pdo_indices, StateInterfaces::VELOCITY);
-    rpdo_mapping_.push_back[pdo_mapping];
+    // Make pair
+    NODE_PDO_INDICES position_node_pdos(node_id, position_pdo_indices);
+    NODE_PDO_INDICES velocity_node_pdos(node_id, velocity_pdo_indices);
+
+    // Intialize the value
+    state_ro_.emplace(position_node_pdos, 0.0);
+    state_ro_.emplace(velocity_node_pdos, 0.0);
+
+    // state
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      info_.joints[i].name, hardware_interface::HW_IF_POSITION,
+      &state_ro_[position_node_pdos]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
+      &state_ro_[position_node_pdos]));
   }
   return state_interfaces;
 }
@@ -115,8 +115,6 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::expo
 std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  velocity_command_.resize(info_.joints.size());
-  tpdo_mapping_.resize(info_.joints.size());
 
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
@@ -127,58 +125,56 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::ex
     }
   
     const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"]));
-  
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
-      velocity_command_[i]));
 
      // Mapping
-    const uint16_t velocity_ref_index = static_cast<uint16_t>(
+    uint16_t velocity_ref_index = static_cast<uint16_t>(
       std::stoi(info_.joints[i].parameters["velocity_ref_index"]));
-    const uint8_t velocity_ref_subindex = static_cast<uint8_t>(
+    uint8_t velocity_ref_subindex = static_cast<uint8_t>(
       std::stoi(info_.joints[i].parameters["velocity_ref_subindex"]));
     
-    auto velocity_ref_indices = std::make_pair<uint16_t, uint8_t>(
-      velocity_ref_index, velocity_ref_subindex);
+    PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
     
-    PDO_INDICES pdo_mapping;
-    pdo_mapping.emplace(velocity_ref_indices, CommandInterfaces::VELOCITY_REFERENCE);
-    tpdo_mapping_.push_back[pdo_mapping];
+    // Make pair
+    NODE_PDO_INDICES velocity_ref_node_indices(node_id, velocity_ref_indices);
+    velocity_command_.emplace(velocity_ref_node_indices, 0.0);
 
+    // register the interface
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
+      &velocity_command_[velocity_ref_node_indices]));
   }
   return command_interfaces;
 }
 
 
-hardware_interface::return_type DiffCanopenSystemMultiRPDO::read()
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::read(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
-  for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it)
+  for (uint i = 0; i < info_.joints.size(); i++)
   {
-    // TODO(): Do the mapping right here
-    
-    PDO_INDICES rpod_indices;
-    rpod_indices.first = it->second.rpdo_data.original_data.index_;
-    rpod_indices.second = it->second.rpdo_data.original_data.subindex_;
-
-    auto interface = rpdo_mapping_[it->first][rpod_indices];
-
-    switch (interface) {
-      case StateInterfaces::VELOCITY: 
-        velocity_ro_[it->first] = it->second.rpdo_data.data;
-        break;
-
-      case StateInterfaces::POSITION:    
-        position_ro_[it->first] = it->second.rpdo_data.data;
-        break;
+    if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
+    {
+      // skip adding canopen interfaces
+      continue;
     }
+
+    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
+
+    PDO_INDICES rpod_indices;
+    rpod_indices.first = canopen_data_[node_id].rpdo_data.original_data.index_;
+    rpod_indices.second = canopen_data_[node_id].rpdo_data.original_data.subindex_;
+
+    NODE_PDO_INDICES node_rpdo_indices(node_id, rpod_indices);
+    state_ro_[node_rpdo_indices] = canopen_data_[node_id].rpdo_data.data;
   }
 
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type DiffCanopenSystemMultiRPDO::write()
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::write(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   auto drivers = device_container_->get_registered_drivers();
 
