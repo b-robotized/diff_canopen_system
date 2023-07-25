@@ -14,18 +14,18 @@
 
 #include <limits>
 #include <vector>
-#include "diff_canopen_system/diffCanopenSystemMultiRPDO.hpp"
+#include "diff_canopen_system/DiffCanopenSystemMultipRPDO.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace
 {
-auto const kLogger = rclcpp::get_logger("diffCanopenSystemMultiRPDO");
+auto const kLogger = rclcpp::get_logger("DiffCanopenSystemMultiRPDO");
 }
 
 namespace diff_canopen_system
 {
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn diffCanopenSystemMultiRPDO::on_init(
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystemMultiRPDO::on_init(
   const hardware_interface::HardwareInfo & info)
 {
   auto init_rval = CanopenSystem::on_init(info);
@@ -48,13 +48,10 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn diffCa
     if (info_.joints[i].parameters.find("node_id") != info_.joints[i].parameters.end())
     {
       // TODO: We should modify this part
-      if (!check_parameter_exist(info_.joints[i].parameters, "velocity_cmd_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "velocity_ref_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "velocity_fbk_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "motor_temperature_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "motor_power_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "battery_state_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "error_status_index", info_.joints[i].name))
+      if (!check_parameter_exist(info_.joints[i].parameters, "veloctiy_index", info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, "velocity_subindex", info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, "position_index", info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, "position_subindex", info_.joints[i].name))
       {
         init_rval = CallbackReturn::ERROR;
       }
@@ -65,7 +62,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn diffCa
 }
 
 
-std::vector<hardware_interface::StateInterface> diffCanopenSystemMultiRPDO::export_state_interfaces()
+std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
@@ -73,6 +70,7 @@ std::vector<hardware_interface::StateInterface> diffCanopenSystemMultiRPDO::expo
   command_interfaces = CanopenSystem::export_command_interfaces();
   position_ro_.resize(info_.joints.size());
   velocity_ro_.resize(info_.joints.size());
+  rpdo_mapping_.resize(info_.joints.size());
 
   for (uint i = 0; i < info_.joints.size(); i++)
   {
@@ -91,17 +89,34 @@ std::vector<hardware_interface::StateInterface> diffCanopenSystemMultiRPDO::expo
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
       velocity_ro_[i]));
-  }
-  // Send request
+    
+    // Mapping
+    const uint16_t position_index = static_cast<uint16_t>(
+      std::stoi(info_.joints[i].parameters["position_index"]));
+    const uint8_t position_subindex = static_cast<uint8_t>(
+      std::stoi(info_.joints[i].parameters["position_subindex"]));
 
+    const uint16_t velocity_index = static_cast<uint16_t>(
+      std::stoi(info_.joints[i].parameters["velocity_index"]));
+    const uint8_t velocity_subindex = static_cast<uint8_t>(
+      std::stoi(info_.joints[i].parameters["velocity_subindex"]));
+    
+    auto position_pdo_indices = std::make_pair<uint16_t, uint8_t>(position_index, position_subindex);
+    auto velocity_pdo_indices = std::make_pair<uint16_t, uint8_t>(velocity_index, velocity_subindex);
+    
+    PDO_INDICES pdo_mapping;
+    pdo_mapping.emplace(position_pdo_indices, StateInterfaces::POSITION);
+    pdo_mapping.emplace(velocity_pdo_indices, StateInterfaces::VELOCITY);
+    rpdo_mapping_.push_back[pdo_mapping];
+  }
   return state_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface> diffCanopenSystemMultiRPDO::export_command_interfaces()
+std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  command_interfaces.resize(info_.joints.size());
   velocity_command_.resize(info_.joints.size());
+  tpdo_mapping_.resize(info_.joints.size());
 
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
@@ -117,34 +132,53 @@ std::vector<hardware_interface::CommandInterface> diffCanopenSystemMultiRPDO::ex
       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
       velocity_command_[i]));
 
+     // Mapping
+    const uint16_t velocity_ref_index = static_cast<uint16_t>(
+      std::stoi(info_.joints[i].parameters["velocity_ref_index"]));
+    const uint8_t velocity_ref_subindex = static_cast<uint8_t>(
+      std::stoi(info_.joints[i].parameters["velocity_ref_subindex"]));
+    
+    auto velocity_ref_indices = std::make_pair<uint16_t, uint8_t>(
+      velocity_ref_index, velocity_ref_subindex);
+    
+    PDO_INDICES pdo_mapping;
+    pdo_mapping.emplace(velocity_ref_indices, CommandInterfaces::VELOCITY_REFERENCE);
+    tpdo_mapping_.push_back[pdo_mapping];
+
   }
   return command_interfaces;
 }
 
 
-hardware_interface::return_type diffCanopenSystemMultiRPDO::read()
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::read()
 {
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it)
   {
     // TODO(): Do the mapping right here
-    bool velocity_rpdo = false;
-    bool position_rpdo = false;
+    
+    PDO_INDICES rpod_indices;
+    rpod_indices.first = it->second.rpdo_data.original_data.index_;
+    rpod_indices.second = it->second.rpdo_data.original_data.subindex_;
 
-    if (velocity_rpdo) {
-      velocity_ro_[i] = static_cast<double>(it->second.rpdo_data.data);
-    }
+    auto interface = rpdo_mapping_[it->first][rpod_indices];
 
-    if (position_rpdo) {
-      position_ro_[i] = static_cast<double>(it->second.rpdo_data.data);
+    switch (interface) {
+      case StateInterfaces::VELOCITY: 
+        velocity_ro_[it->first] = it->second.rpdo_data.data;
+        break;
+
+      case StateInterfaces::POSITION:    
+        position_ro_[it->first] = it->second.rpdo_data.data;
+        break;
     }
   }
 
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type diffCanopenSystemMultiRPDO::write()
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::write()
 {
   auto drivers = device_container_->get_registered_drivers();
 
@@ -166,11 +200,12 @@ hardware_interface::return_type diffCanopenSystemMultiRPDO::write()
       it->second.nmt_state.start_fbk = static_cast<double>(proxy_driver->start_node_nmt_command());
     }
 
+    // TODO: Add the mapping right here
     // tpdo data one shot mechanism
     if (it->second.tpdo_data.write_command())
     {
       // Convert percents command to speed data
-      it->second.tpdo_data.data = convert_percentage_to_speed_value(it->second.tpdo_data.data);
+      it->second.tpdo_data.data = it->second.tpdo_data.data;
       it->second.tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
       // Debug Message
@@ -192,4 +227,4 @@ hardware_interface::return_type diffCanopenSystemMultiRPDO::write()
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  diff_canopen_system::diffCanopenSystemMultiRPDO, hardware_interface::SystemInterface)
+  diff_canopen_system::DiffCanopenSystemMultiRPDO, hardware_interface::SystemInterface)

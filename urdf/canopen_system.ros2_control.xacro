@@ -19,9 +19,21 @@
             </hardware>
             <joint name="${prefix}node_1">
                 <param name="node_id">2</param>
+                <param name="velocity_ref_index">4000</param>
+                <param name="velocity_ref_subindex">0</param>
+                <param name="position_index">4001</param>
+                <param name="position_subindex">0</param>
+                <param name="velocity_index">4003</param>
+                <param name="position_subindex">0</param>
             </joint>
             <joint name="${prefix}node_2">
                 <param name="node_id">3</param>
+                <param name="velocity_ref_index">4000</param>
+                <param name="velocity_ref_subindex">0</param>
+                <param name="position_index">4001</param>
+                <param name="position_subindex">0</param>
+                <param name="velocity_index">4003</param>
+                <param name="position_subindex">0</param>
             </joint>
         </ros2_control>
 

@@ -6,4 +6,13 @@
       ros2_control hardware interface.
     </description>
   </class>
+
+  <class name="diff_canopen_system/DiffCanopenSystemMultiRPDO"
+         type="diff_canopen_system::DiffCanopenSystemMultiRPDO"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control hardware interface.
+    </description>
+  </class>
 </library>
+

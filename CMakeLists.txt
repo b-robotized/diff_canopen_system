@@ -17,6 +17,7 @@ add_library(
   diff_canopen_system
   SHARED
   src/DiffCanopenSystem.cpp
+  src/DiffCanopenSystemMultiRPDO.cpp
 )
 target_include_directories(
   diff_canopen_system

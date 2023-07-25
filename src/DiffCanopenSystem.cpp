@@ -99,7 +99,8 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
 std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  state_interfaces.resize(info_.joints.size() * 7);
+  // Comment this cout since hardware_interface::StateInterface does not support default constructor
+  // state_interfaces.resize(info_.joints.size() * 7);
 
   // for (size_t i = 0; i < info_.joints.size(); ++i)
   // {
@@ -141,7 +142,8 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
 std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  command_interfaces.resize(info_.joints.size() * 5);
+  // Comment this cout since hardware_interface::CommandInterface does not support default constructor
+  // command_interfaces.resize(info_.joints.size() * 5);
 
   // for (size_t i = 0; i < info_.joints.size(); ++i)
   // {

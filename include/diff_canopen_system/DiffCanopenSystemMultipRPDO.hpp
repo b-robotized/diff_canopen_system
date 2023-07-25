@@ -78,16 +78,34 @@ protected:
   // void initDeviceContainer() override;
 
 private:
-  // State converter
-  uint32_t convert_percentage_to_speed_value(const double);
-  double convert_rpm_to_rads(const uint32_t);
+  // This make the std::pair hashable
+  struct pair_hash
+  {
+    template <class T1, class T2>
+    std::size_t operator () (const std::pair<T1, T2> &pair) const
+    {
+      auto h1 = std::hash<T1>{}(pair.first);
+      auto h2 = std::hash<T2>{}(pair.second); 
+
+      // Mainly for demonstration purposes, i.e. works but is overly simple
+      // In the real world, use sth. like boost.hash_combine
+      return h1 ^ h2;  
+    }
+  };
+
+  // PDO_Interfaces_Mapping
+  using PDO_INDICES = std::pair<uint16_t, uint8_t>;
+  using RPDO_INDICES_MAPPING = std::unordered_map<PDO_INDICES, StateInterfaces, pair_hash>;
+  using TPDO_INDICES_MAPPING = std::unordered_map<PDO_INDICES, CommandInterfaces, pair_hash>;
+  std::vector<RPDO_INDICES_MAPPING> rpdo_mapping_;
+  std::vector<TPDO_INDICES_MAPPING> tpdo_mapping_;
 
   // States - Read only
   std::vector<double> position_ro_;
   std::vector<double> velocity_ro_;
 
   // Command
-  std::vector<double> position_command_; 
+  std::vector<double> velocity_command_; 
 };
 
 }  // namespace diff_canopen_system
