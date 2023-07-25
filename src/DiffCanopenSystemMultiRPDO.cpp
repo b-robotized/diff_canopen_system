@@ -47,14 +47,23 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
     // Check parameters consistency for canopen joints
     if (info_.joints[i].parameters.find("node_id") != info_.joints[i].parameters.end())
     {
-      // TODO: We should modify this part
-      if (!check_parameter_exist(info_.joints[i].parameters, "veloctiy_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "velocity_subindex", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "position_index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "position_subindex", info_.joints[i].name))
+      if (info_.joints[i].state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
       {
-        init_rval = CallbackReturn::ERROR;
-      }
+        RCLCPP_FATAL(
+            rclcpp::get_logger("DiffBotSystemHardware"),
+            "Joint '%s' have '%s' as first state interface. '%s' expected.", info_.joints[i].name.c_str(),
+            info_.joints[i].state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
+          return hardware_interface::CallbackReturn::ERROR;
+        }
+
+        if (info_.joints[i].state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
+        {
+          RCLCPP_FATAL(
+            rclcpp::get_logger("DiffBotSystemHardware"),
+            "Joint '%s' have '%s' as second state interface. '%s' expected.", info_.joints[i].name.c_str(),
+            info_.joints[i].state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+          return hardware_interface::CallbackReturn::ERROR;
+        }
     }
   }
 
@@ -81,14 +90,14 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::expo
 
     // Mapping
     uint16_t position_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["position_index"]));
+      std::stoi(info_.joints[i].state_interfaces[0].parameters["index"]));
     uint8_t position_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["position_subindex"]));
+      std::stoi(info_.joints[i].state_interfaces[0].parameters["subindex"]));
 
     uint16_t velocity_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["velocity_index"]));
+      std::stoi(info_.joints[i].state_interfaces[1].parameters["index"]));
     uint8_t velocity_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["velocity_subindex"]));
+      std::stoi(info_.joints[i].state_interfaces[1].parameters["subindex"]));
     
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
     PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
@@ -126,11 +135,11 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::ex
   
     const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"]));
 
-     // Mapping
+    // Mapping - TODO(): Check interface type
     uint16_t velocity_ref_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["velocity_ref_index"]));
+      std::stoi(info_.joints[i].command_interfaces[0]["index"]));
     uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["velocity_ref_subindex"]));
+      std::stoi(info_.joints[i].command_interfaces[0]["subindex"]));
     
     PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
     

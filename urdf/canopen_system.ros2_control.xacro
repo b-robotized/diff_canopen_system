@@ -19,21 +19,33 @@
             </hardware>
             <joint name="${prefix}node_1">
                 <param name="node_id">2</param>
-                <param name="velocity_ref_index">4000</param>
-                <param name="velocity_ref_subindex">0</param>
-                <param name="position_index">4001</param>
-                <param name="position_subindex">0</param>
-                <param name="velocity_index">4003</param>
-                <param name="position_subindex">0</param>
+                <command_interface name="velocity">
+                    <param name="index">4000</param>
+                    <param name="subindex">0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="index">4001</param>
+                    <param name="subindex">0</param>
+                </state_interface>
+                <state_interface name="velocity">
+                    <param name="index">4003</param>
+                    <param name="subindex">0</param>
+                </state_interface>
             </joint>
             <joint name="${prefix}node_2">
                 <param name="node_id">3</param>
-                <param name="velocity_ref_index">4000</param>
-                <param name="velocity_ref_subindex">0</param>
-                <param name="position_index">4001</param>
-                <param name="position_subindex">0</param>
-                <param name="velocity_index">4003</param>
-                <param name="position_subindex">0</param>
+               <command_interface name="velocity">
+                    <param name="index">4000</param>
+                    <param name="subindex">0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="index">4001</param>
+                    <param name="subindex">0</param>
+                </state_interface>
+                <state_interface name="velocity">
+                    <param name="index">4003</param>
+                    <param name="subindex">0</param>
+                </state_interface>
             </joint>
         </ros2_control>
 
