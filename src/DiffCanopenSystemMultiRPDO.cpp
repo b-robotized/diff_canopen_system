@@ -30,18 +30,6 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
 {
   auto init_rval = CanopenSystem::on_init(info);
 
-  auto check_parameter_exist = [](
-    const std::unordered_map<std::string, std::string> & param_map, const std::string & param_name,
-    const std::string & joint_name)
-  {
-    if (param_map.find(param_name) == param_map.end())
-    {
-      RCLCPP_FATAL(kLogger, "Missing '%s' parameter for joint '%s'!", param_name.c_str(), joint_name.c_str());
-      return false;
-    }
-    return true;
-  };
-
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
     // Check parameters consistency for canopen joints
@@ -90,14 +78,14 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::expo
 
     // Mapping
     uint16_t position_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].state_interfaces[0].parameters["index"]));
+      std::stoi(info_.joints[i].parameters["state_interface__position__index"]));
     uint8_t position_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].state_interfaces[0].parameters["subindex"]));
+      std::stoi(info_.joints[i].parameters["state_interface__position__subindex"]));
 
     uint16_t velocity_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].state_interfaces[1].parameters["index"]));
+      std::stoi(info_.joints[i].parameters["state_interface__velocity__index"]));
     uint8_t velocity_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].state_interfaces[1].parameters["subindex"]));
+      std::stoi(info_.joints[i].parameters["state_interface__velocity__subindex"]));
     
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
     PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
@@ -137,9 +125,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::ex
 
     // Mapping - TODO(): Check interface type
     uint16_t velocity_ref_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].command_interfaces[0]["index"]));
+      std::stoi(info_.joints[i].parameters["command_interface__velocty__index"]));
     uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].command_interfaces[0]["subindex"]));
+      std::stoi(info_.joints[i].parameters["command_interface__velocty__subindex"]));
     
     PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
     

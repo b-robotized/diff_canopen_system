@@ -85,4 +85,9 @@ ament_export_dependencies(
   rclcpp_lifecycle
 )
 
+### INSTALL ###
+install(DIRECTORY config launch urdf
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 ament_package()

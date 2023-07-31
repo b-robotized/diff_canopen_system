@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="$(arg name)">
 
-    <xacro:arg name="name" default="canopen_test_system"/>
+    <xacro:arg name="name" default="diff_canopen_test_system"/>
 
     <xacro:arg name="prefix" default="" />
 
@@ -12,7 +12,7 @@
 
 
     <!-- ros2 control include -->
-    <xacro:include filename="$(find canopen_tests)/urdf/canopen_system/canopen_system.ros2_control.xacro"/>
+    <xacro:include filename="$(find diff_canopen_system)/urdf/diff_canopen_system.ros2_control.xacro"/>
 
     <xacro:canopen_ros2_control_test
       name="$(arg name)"
