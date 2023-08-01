@@ -25,6 +25,8 @@ auto const kLogger = rclcpp::get_logger("DiffCanopenSystem");
 
 namespace diff_canopen_system
 {
+DiffCanopenSystem::DiffCanopenSystem(): CanopenSystem() {};
+
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystem::on_init(
   const hardware_interface::HardwareInfo & info)
 {

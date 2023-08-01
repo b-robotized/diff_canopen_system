@@ -12,9 +12,9 @@
 
 
     <!-- ros2 control include -->
-    <xacro:include filename="$(find diff_canopen_system)/urdf/diff_canopen_system.ros2_control.xacro"/>
+    <xacro:include filename="$(find diff_canopen_system)/urdf/test_diff_canopen_system.ros2_control.xacro"/>
 
-    <xacro:canopen_ros2_control_test
+    <xacro:diff_canopen_ros2_control_test
       name="$(arg name)"
       prefix="$(arg prefix)"
       bus_config="$(arg bus_config)"

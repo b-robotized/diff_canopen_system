@@ -70,7 +70,7 @@ public:
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   DiffCanopenSystem();
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  ~DiffCanopenSystem();
+  ~DiffCanopenSystem() = default;
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;

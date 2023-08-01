@@ -56,6 +56,8 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare(bus_config_package), bus_config_directory, bus_config_file]
     )
 
+    print(bus_config)
+
     # master configuration
     master_config_package = LaunchConfiguration("master_config_package")
     master_config_directory = LaunchConfiguration("master_config_directory")
@@ -64,6 +66,8 @@ def launch_setup(context, *args, **kwargs):
     master_config = PathJoinSubstitution(
         [FindPackageShare(master_config_package), master_config_directory, master_config_file]
     )
+
+    print(master_config)
 
     # can interface name
     can_interface_name = LaunchConfiguration("can_interface_name")
@@ -199,7 +203,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             description="Name of the urdf file.",
-            default_value="diff_canopen_system.urdf.xacro",
+            default_value="test_diff_canopen_system.urdf.xacro",
         )
     )
     declared_arguments.append(
@@ -212,7 +216,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ros2_control_config_directory",
-            default_value="config",
+            default_value="config/test_diff_canopen_system",
             description="Path to ros2_control configuration.",
         )
     )
@@ -233,7 +237,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "bus_config_directory",
-            default_value="config",
+            default_value="config/test_diff_canopen_system",
             description="Path to bus configuration.",
         )
     )
@@ -254,7 +258,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "master_config_directory",
-            default_value="config",
+            default_value="config/test_diff_canopen_system",
             description="Path to master configuration file (*.dcf)",
         )
     )

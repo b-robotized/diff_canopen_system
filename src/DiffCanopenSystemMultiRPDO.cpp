@@ -25,6 +25,8 @@ auto const kLogger = rclcpp::get_logger("DiffCanopenSystemMultiRPDO");
 
 namespace diff_canopen_system
 {
+DiffCanopenSystemMultiRPDO::DiffCanopenSystemMultiRPDO(): CanopenSystem() {};
+
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystemMultiRPDO::on_init(
   const hardware_interface::HardwareInfo & info)
 {
@@ -113,6 +115,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::ex
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
+  // underlying base class export first
+  command_interfaces = CanopenSystem::export_command_interfaces();
+
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
     if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
@@ -145,8 +150,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::ex
 
 
 hardware_interface::return_type DiffCanopenSystemMultiRPDO::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  auto ret_val = CanopenSystem::read(time, period);
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
   for (uint i = 0; i < info_.joints.size(); i++)
@@ -167,12 +173,14 @@ hardware_interface::return_type DiffCanopenSystemMultiRPDO::read(
     state_ro_[node_rpdo_indices] = canopen_data_[node_id].rpdo_data.data;
   }
 
-  return hardware_interface::return_type::OK;
+  return ret_val;
 }
 
 hardware_interface::return_type DiffCanopenSystemMultiRPDO::write(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  auto ret_val = CanopenSystem::write(time, period);
+  
   auto drivers = device_container_->get_registered_drivers();
 
   // TODO: delete the message that we do not need.

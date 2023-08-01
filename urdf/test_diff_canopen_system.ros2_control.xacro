@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:macro name="canopen_ros2_control_test" params="
+    <xacro:macro name="diff_canopen_ros2_control_test" params="
       name
       prefix
       bus_config

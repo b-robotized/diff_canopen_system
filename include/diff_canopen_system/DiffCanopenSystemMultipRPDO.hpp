@@ -57,7 +57,7 @@ public:
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   DiffCanopenSystemMultiRPDO();
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  ~DiffCanopenSystemMultiRPDO();
+  ~DiffCanopenSystemMultiRPDO() = default;
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
@@ -96,7 +96,7 @@ private:
 
         return h1 ^ h2;
     }
-};
+  };
 
   // PDO_Interfaces_Mapping
   using PDO_INDICES = std::pair<uint16_t, uint8_t>; // Index, Subindex

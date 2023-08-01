@@ -12,6 +12,7 @@ find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(canopen_ros2_control REQUIRED)
+find_package(lely_core_libraries REQUIRED)
 
 add_library(
   diff_canopen_system
@@ -85,8 +86,10 @@ ament_export_dependencies(
   rclcpp_lifecycle
 )
 
+generate_dcf(test_diff_canopen_system)
+
 ### INSTALL ###
-install(DIRECTORY config launch urdf
+install(DIRECTORY launch urdf
   DESTINATION share/${PROJECT_NAME}/
 )
 
