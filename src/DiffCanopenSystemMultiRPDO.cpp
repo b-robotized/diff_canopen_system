@@ -76,7 +76,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::expo
       continue;
     }
 
-    const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
 
     // Mapping
     uint16_t position_index = static_cast<uint16_t>(
@@ -155,7 +155,7 @@ hardware_interface::return_type DiffCanopenSystemMultiRPDO::read(
   auto ret_val = CanopenSystem::read(time, period);
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
-  for (uint i = 0; i < info_.joints.size(); i++)
+  for (size_t i = 0; i < info_.joints.size(); i++)
   {
     if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
     {
