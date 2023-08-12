@@ -31,46 +31,13 @@
 namespace diff_canopen_system
 {
 
-enum CommandInterfaces
-{
-  VELOCITY_REFERENCE,
-  NMT_RESET,
-  NMT_RESET_FBK,
-  NMT_START,
-  NMT_START_FBK,
-};
-
-enum StateInterfaces
-{
-  VELOCITY_REF,
-  VELOCITY_FEEDBACK,
-  MOTOR_TEMPERATURE,
-  MOTOR_POWER,
-  BATTERY_STATE,
-  ERROR_STATUS,
-  NMT_STATE,
-};
-
-struct WheelState {
-  // Read only
-  double velocity_reference;
-  double velocity_feedback;
-  double motor_temperature;
-  double motor_power;
-  double motor_battery_state;
-  double error_status; 
-
-  // Write only
-  double velocity_command;
-};
-
-class DiffCanopenSystem : public canopen_ros2_control::CanopenSystem
+class DiffCanopenSystemAbstractPDOMapping : public canopen_ros2_control::CanopenSystem
 {
 public:
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  DiffCanopenSystem();
+  DiffCanopenSystemAbstractPDOMapping();
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  ~DiffCanopenSystem() = default;
+  ~DiffCanopenSystemAbstractPDOMapping() = default;
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
@@ -82,18 +49,17 @@ public:
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  hardware_interface::return_type read(const rclcpp::Time &time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type read(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  hardware_interface::return_type write(const rclcpp::Time &time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type write(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 protected:
   // void initDeviceContainer() override;
 
 private:
-  // States - This is a container to store states in a double form
-  std::unordered_map<uint, WheelState> wheel_states_;
-
   // This make the std::pair hashable
   struct pair_hash {
     template <class T1, class T2>
@@ -121,19 +87,6 @@ private:
 
   // Command
   std::unordered_map<NODE_PDO_INDICES, double, pair_hash> velocity_command_; 
-
-  // State converter
-  double (*FunctionType)(double);
-  std::unordered_map<NODE_PDO_INDICES, FunctionType, pair_hash> state_converter_;
-
-  double convert_to_temperature(double rpdo_data);
-  double convert_to_veloctiy(double rpdo_data);
-  double convert_to_RPM(double rpdo_data);
-  double convert_to_switch_voltage(double rpdo_data)
-
-  double convert_rpm_to_rads(const uint32_t);
-  uint32_t convert_percentage_to_speed_value(const double);
-  
 };
 
 }  // namespace diff_canopen_system
