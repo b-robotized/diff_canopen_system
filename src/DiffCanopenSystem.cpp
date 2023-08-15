@@ -167,7 +167,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_ro_.emplace(voltage_node_pdos   , 0.0);
 
     // State converter
-    state_converter_.emplace(position_node_pdos  , &DiffCanopenSystem::convert_to_posotion      );
+    state_converter_.emplace(position_node_pdos  , &DiffCanopenSystem::convert_to_position      );
     state_converter_.emplace(velocity_node_pdos  , &DiffCanopenSystem::convert_to_veloctiy      );
     state_converter_.emplace(rpm_node_pdos       , &DiffCanopenSystem::convert_to_RPM           );
     state_converter_.emplace(tempeature_node_pdos, &DiffCanopenSystem::convert_to_temperature   );
@@ -263,39 +263,102 @@ hardware_interface::return_type DiffCanopenSystem::write(
 {
   auto drivers = device_container_->get_registered_drivers();
 
-
-  for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it)
+  for (size_t i = 0; i < info_.joints.size(); i++)
   {
-    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[it->first]);
+    if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
+    {
+      // skip adding canopen interfaces
+      continue;
+    }
+
+    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
+    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
     // reset node nmt
-    if (it->second.nmt_state.reset_command())
+    if (canopen_data_[node_id].nmt_state.reset_command())
     {
-      it->second.nmt_state.reset_fbk = static_cast<double>(proxy_driver->reset_node_nmt_command());
+      canopen_data_[node_id].nmt_state.reset_fbk = static_cast<double>(proxy_driver->reset_node_nmt_command());
     }
 
     // start nmt
-    if (it->second.nmt_state.start_command())
+    if (canopen_data_[node_id].nmt_state.start_command())
     {
-      it->second.nmt_state.start_fbk = static_cast<double>(proxy_driver->start_node_nmt_command());
+      canopen_data_[node_id].nmt_state.start_fbk = static_cast<double>(proxy_driver->start_node_nmt_command());
     }
 
     // tpdo data one shot mechanism
-    if (it->second.tpdo_data.write_command())
+    if (canopen_data_[node_id].tpdo_data.write_command())
     {
       // Convert percents command to speed data
-      it->second.tpdo_data.data = convert_percentage_to_speed_value(it->second.tpdo_data.data);
-      it->second.tpdo_data.prepare_data();
-      proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
+      // Command interface (rad/s) -> RPM -> Percentage -> CAN - Data
+      
+      // Maybe we do not need this mapping
+      uint16_t velocity_ref_index = static_cast<uint16_t>(
+        std::stoi(info_.joints[i].parameters["command_interface__velocty__index"]));
+      uint8_t velocity_ref_subindex = static_cast<uint8_t>(
+        std::stoi(info_.joints[i].parameters["command_interface__velocty__subindex"]));
+    
+      // Make pair
+      PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
+      NODE_PDO_INDICES velocity_ref_node_indices(node_id, velocity_ref_indices);
+
+      // Get rads from command interaface and then convert to RPM
+      double rpm = convert_rads_to_rpm(velocity_command_[velocity_ref_node_indices]);
+
+      // TODO(): We need PRM -> Percentage
+      double percentage = convert_rpm_to_percentage(rpm);
+
+      // Prepare the data
+      canopen_data_[node_id].tpdo_data.data = convert_percentage_to_speed_value(percentage);
+      canopen_data_[node_id].tpdo_data.prepare_data();
+      proxy_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
       // Debug Message
       RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
       RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u",
-      it->first,
-      it->second.tpdo_data.original_data.index_,
-      it->second.tpdo_data.original_data.subindex_,
-      it->second.tpdo_data.original_data.data_);
+      node_id,
+      canopen_data_[node_id].tpdo_data.original_data.index_,
+      canopen_data_[node_id].tpdo_data.original_data.subindex_,
+      canopen_data_[node_id].tpdo_data.original_data.data_);
       RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
     }
+
+
+    // for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it)
+    // {
+    //   auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[it->first]);
+
+    //   // reset node nmt
+    //   if (it->second.nmt_state.reset_command())
+    //   {
+    //     it->second.nmt_state.reset_fbk = static_cast<double>(proxy_driver->reset_node_nmt_command());
+    //   }
+
+    //   // start nmt
+    //   if (it->second.nmt_state.start_command())
+    //   {
+    //     it->second.nmt_state.start_fbk = static_cast<double>(proxy_driver->start_node_nmt_command());
+    //   }
+
+    //   // tpdo data one shot mechanism
+    //   if (it->second.tpdo_data.write_command())
+    //   {
+    //     // Convert percents command to speed data
+    //     // Command interface (rad/s) -> RPM -> Percentage -> CAN - Data
+    //     double rpm = convert_rads_to_rpm(velocity_command_[]);
+
+    //     // TODO(): We need PRM -> Percentage
+    //     it->second.tpdo_data.data = convert_percentage_to_speed_value(it->second.tpdo_data.data);
+    //     it->second.tpdo_data.prepare_data();
+    //     proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
+    //     // Debug Message
+    //     RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
+    //     RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u",
+    //     it->first,
+    //     it->second.tpdo_data.original_data.index_,
+    //     it->second.tpdo_data.original_data.subindex_,
+    //     it->second.tpdo_data.original_data.data_);
+    //     RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
+    //   }
   }
 
   return hardware_interface::return_type::OK;
@@ -315,7 +378,13 @@ double DiffCanopenSystem::convert_rpm_to_rads(const uint32_t rpm)
   return rads;
 }
 
-double DiffCanopenSystem::convert_to_posotion(double rpdo_data) 
+double DiffCanopenSystem::convert_rads_to_rpm(const double rads)
+{
+  double rpm = rads*30/M_PI; // = rads*60/PI/2
+  return rpm;
+}
+
+double DiffCanopenSystem::convert_to_position(double rpdo_data) 
 {
   // TODO(): Do the convertation here!
   return rpdo_data;
@@ -345,6 +414,12 @@ double DiffCanopenSystem::convert_to_switch_voltage(double rpdo_data)
   return rpdo_data;
 }
 
+double DiffCanopenSystem::convert_rpm_to_percentage(double rpm)
+{
+  // TODO(): Do the convertation here!
+  double percentage = rpm;
+  return percentage;
+}
 
 }  // namespace diff_canopen_system
 
