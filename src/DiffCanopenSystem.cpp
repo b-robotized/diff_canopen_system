@@ -60,7 +60,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
           !check_parameter_exist(info_.joints[i].parameters, "state_interface__temperature__index", info_.joints[i].name) ||
           !check_parameter_exist(info_.joints[i].parameters, "state_interface__temperature__subindex", info_.joints[i].name) ||
           !check_parameter_exist(info_.joints[i].parameters, "state_interface__voltage__index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__voltage__subindex", info_.joints[i].name) ||)
+          !check_parameter_exist(info_.joints[i].parameters, "state_interface__voltage__subindex", info_.joints[i].name))
       {
         init_rval = CallbackReturn::ERROR;
       }
@@ -143,8 +143,8 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
 
     uint16_t voltage_index = static_cast<uint16_t>(
       std::stoi(info_.joints[i].parameters["state_interface__voltage__index"]));
-    uint8_t voltage_subindex = static_cast<uint8_t>(state_interface__voltage__subindex
-      std::stoi(info_.joints[i].parameters["state_interface__rpm__subindex"]));  
+    uint8_t voltage_subindex = static_cast<uint8_t>(
+      std::stoi(info_.joints[i].parameters["state_interface__voltage__subindex"]));  
     
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
     PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
@@ -231,7 +231,7 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 
 
 hardware_interface::return_type DiffCanopenSystem::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   auto ret_val = CanopenSystem::read(time, period);
   // Find a mapping between RPDOs and the state variables..
@@ -327,19 +327,19 @@ double DiffCanopenSystem::convert_to_veloctiy(double rpdo_data)
   return rpdo_data;
 }
 
-double DiffCanopenSystem::convert_to_RPM(double rpdo_data);
+double DiffCanopenSystem::convert_to_RPM(double rpdo_data)
 {
   // TODO(): Do the convertation here!
   return rpdo_data;
 }
 
-double DiffCanopenSystem::convert_to_temperature(double rpdo_data);
+double DiffCanopenSystem::convert_to_temperature(double rpdo_data)
 {
   // TODO(): Do the convertation here!
   return rpdo_data;
 }
 
-double DiffCanopenSystem::convert_to_switch_voltage(double rpdo_data);
+double DiffCanopenSystem::convert_to_switch_voltage(double rpdo_data)
 {
   // TODO(): Do the convertation here!
   return rpdo_data;

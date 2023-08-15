@@ -126,10 +126,11 @@ private:
   double (*FunctionType)(double);
   std::unordered_map<NODE_PDO_INDICES, FunctionType, pair_hash> state_converter_;
 
+  double convert_to_posotion(double rpdo_data);
   double convert_to_temperature(double rpdo_data);
   double convert_to_veloctiy(double rpdo_data);
   double convert_to_RPM(double rpdo_data);
-  double convert_to_switch_voltage(double rpdo_data)
+  double convert_to_switch_voltage(double rpdo_data);
 
   double convert_rpm_to_rads(const uint32_t);
   uint32_t convert_percentage_to_speed_value(const double);
