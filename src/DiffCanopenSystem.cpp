@@ -321,44 +321,6 @@ hardware_interface::return_type DiffCanopenSystem::write(
       canopen_data_[node_id].tpdo_data.original_data.data_);
       RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
     }
-
-
-    // for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it)
-    // {
-    //   auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[it->first]);
-
-    //   // reset node nmt
-    //   if (it->second.nmt_state.reset_command())
-    //   {
-    //     it->second.nmt_state.reset_fbk = static_cast<double>(proxy_driver->reset_node_nmt_command());
-    //   }
-
-    //   // start nmt
-    //   if (it->second.nmt_state.start_command())
-    //   {
-    //     it->second.nmt_state.start_fbk = static_cast<double>(proxy_driver->start_node_nmt_command());
-    //   }
-
-    //   // tpdo data one shot mechanism
-    //   if (it->second.tpdo_data.write_command())
-    //   {
-    //     // Convert percents command to speed data
-    //     // Command interface (rad/s) -> RPM -> Percentage -> CAN - Data
-    //     double rpm = convert_rads_to_rpm(velocity_command_[]);
-
-    //     // TODO(): We need PRM -> Percentage
-    //     it->second.tpdo_data.data = convert_percentage_to_speed_value(it->second.tpdo_data.data);
-    //     it->second.tpdo_data.prepare_data();
-    //     proxy_driver->tpdo_transmit(it->second.tpdo_data.original_data);
-    //     // Debug Message
-    //     RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
-    //     RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u",
-    //     it->first,
-    //     it->second.tpdo_data.original_data.index_,
-    //     it->second.tpdo_data.original_data.subindex_,
-    //     it->second.tpdo_data.original_data.data_);
-    //     RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
-    //   }
   }
 
   return hardware_interface::return_type::OK;
