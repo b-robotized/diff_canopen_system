@@ -167,11 +167,11 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_ro_.emplace(voltage_node_pdos   , 0.0);
 
     // State converter
-    state_converter_.emplace(position_node_pdos  , convert_to_posotion      );
-    state_converter_.emplace(velocity_node_pdos  , convert_to_veloctiy      );
-    state_converter_.emplace(rpm_node_pdos       , convert_to_RPM           );
-    state_converter_.emplace(tempeature_node_pdos, convert_to_temperature   );
-    state_converter_.emplace(voltage_node_pdos   , convert_to_switch_voltage);
+    state_converter_.emplace(position_node_pdos  , &DiffCanopenSystem::convert_to_posotion      );
+    state_converter_.emplace(velocity_node_pdos  , &DiffCanopenSystem::convert_to_veloctiy      );
+    state_converter_.emplace(rpm_node_pdos       , &DiffCanopenSystem::convert_to_RPM           );
+    state_converter_.emplace(tempeature_node_pdos, &DiffCanopenSystem::convert_to_temperature   );
+    state_converter_.emplace(voltage_node_pdos   , &DiffCanopenSystem::convert_to_switch_voltage);
 
     // state
     state_interfaces.emplace_back(hardware_interface::StateInterface(
