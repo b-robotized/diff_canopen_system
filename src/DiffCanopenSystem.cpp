@@ -67,6 +67,9 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
     }
   }
 
+  // Clear all saved PDO indices
+  state_pdo_indices_.clear();
+
   return init_rval;
 }
 
@@ -106,9 +109,6 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
 std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-
-  // underlying base class export first
-  state_interfaces = CanopenSystem::export_state_interfaces();
 
   for (uint i = 0; i < info_.joints.size(); i++)
   {
@@ -151,6 +151,13 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     PDO_INDICES rpm_pdo_indices(rpm_index, rpm_subindex);
     PDO_INDICES tempeature_pdo_indices(temperature_index, temperature_subindex);
     PDO_INDICES voltage_pdo_indices(voltage_index, voltage_subindex);
+
+    // Save the PDO indices
+    state_pdo_indices_.emplace_back(position_pdo_indices);
+    state_pdo_indices_.emplace_back(velocity_pdo_indices);
+    state_pdo_indices_.emplace_back(rpm_pdo_indices);
+    state_pdo_indices_.emplace_back(tempeature_pdo_indices);
+    state_pdo_indices_.emplace_back(voltage_pdo_indices);
     
     // Make pair
     NODE_PDO_INDICES position_node_pdos  (node_id, position_pdo_indices);
@@ -188,7 +195,10 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
       &state_ro_[tempeature_node_pdos]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, "voltage",
-      &state_ro_[voltage_node_pdos]));
+      &state_ro_[voltage_node_pdos])); 
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      info_.joints[i].name, "nmt/state",
+       &canopen_data_[node_id].nmt_state.state));
   }
   return state_interfaces;
 }
@@ -196,8 +206,6 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
 std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  // underlying base class export first
-  command_interfaces = CanopenSystem::export_command_interfaces();
 
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
@@ -225,6 +233,16 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
       &velocity_command_[velocity_ref_node_indices]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      info_.joints[i].name, "nmt/reset", &canopen_data_[node_id].nmt_state.reset_ons));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      info_.joints[i].name, "nmt/reset_fbk", &canopen_data_[node_id].nmt_state.reset_fbk));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      info_.joints[i].name, "nmt/start", &canopen_data_[node_id].nmt_state.start_ons));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      info_.joints[i].name, "nmt/start_fbk", &canopen_data_[node_id].nmt_state.start_fbk));
   }
   return command_interfaces;
 }
@@ -238,23 +256,20 @@ hardware_interface::return_type DiffCanopenSystem::read(
   // This for loop read the current value from the different joints.
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
-    if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
-    {
-      // skip adding canopen interfaces
-      continue;
-    }
-
     const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
 
-    PDO_INDICES rpod_indices;
-    rpod_indices.first = canopen_data_[node_id].rpdo_data.original_data.index_;
-    rpod_indices.second = canopen_data_[node_id].rpdo_data.original_data.subindex_;
-
-    NODE_PDO_INDICES node_rpdo_indices(node_id, rpod_indices);
-    // This will call the corresponding converter
-    double processed_state = state_converter_[node_rpdo_indices](
-      canopen_data_[node_id].rpdo_data.data);
-    state_ro_[node_rpdo_indices] = processed_state;
+    for (auto pdo_index : state_pdo_indices_)
+    {
+      // Get the data from the map
+      double data = canopen_data_[node_id].get_rpdo_data(pdo_index.first, pdo_index.second);
+      
+      // Convert data to desired format
+      NODE_PDO_INDICES node_rpdo_indices(node_id, pdo_index); 
+      double processed_state = state_converter_[node_rpdo_indices](data);
+      
+      // Write to state interface
+      state_ro_[node_rpdo_indices] = processed_state;   
+    }
   }
 }
 
@@ -265,12 +280,6 @@ hardware_interface::return_type DiffCanopenSystem::write(
 
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
-    if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
-    {
-      // skip adding canopen interfaces
-      continue;
-    }
-
     const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
