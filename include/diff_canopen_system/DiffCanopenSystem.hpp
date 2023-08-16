@@ -82,10 +82,10 @@ public:
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  hardware_interface::return_type read(const rclcpp::Time &time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type read() override;
 
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  hardware_interface::return_type write(const rclcpp::Time &time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type write() override;
 
 protected:
   // void initDeviceContainer() override;

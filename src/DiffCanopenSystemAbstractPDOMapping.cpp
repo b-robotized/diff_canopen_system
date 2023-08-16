@@ -43,7 +43,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
             rclcpp::get_logger("DiffBotSystemHardware"),
             "Joint '%s' have '%s' as first state interface. '%s' expected.", info_.joints[i].name.c_str(),
             info_.joints[i].state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-          return hardware_interface::CallbackReturn::ERROR;
+          return CallbackReturn::ERROR;
         }
 
         if (info_.joints[i].state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
@@ -52,7 +52,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
             rclcpp::get_logger("DiffBotSystemHardware"),
             "Joint '%s' have '%s' as second state interface. '%s' expected.", info_.joints[i].name.c_str(),
             info_.joints[i].state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-          return hardware_interface::CallbackReturn::ERROR;
+          return CallbackReturn::ERROR;
         }
     }
   }

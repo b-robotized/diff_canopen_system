@@ -248,10 +248,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 }
 
 
-hardware_interface::return_type DiffCanopenSystem::read(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type DiffCanopenSystem::read()
 {
-  auto ret_val = CanopenSystem::read(time, period);
+  auto ret_val = CanopenSystem::read();
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
   for (size_t i = 0; i < info_.joints.size(); i++)
@@ -271,10 +270,11 @@ hardware_interface::return_type DiffCanopenSystem::read(
       state_ro_[node_rpdo_indices] = processed_state;   
     }
   }
+
+  return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type DiffCanopenSystem::write(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+hardware_interface::return_type DiffCanopenSystem::write()
 {
   auto drivers = device_container_->get_registered_drivers();
 

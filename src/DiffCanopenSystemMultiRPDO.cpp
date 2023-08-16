@@ -43,7 +43,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
             rclcpp::get_logger("DiffBotSystemHardware"),
             "Joint '%s' have '%s' as first state interface. '%s' expected.", info_.joints[i].name.c_str(),
             info_.joints[i].state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-          return hardware_interface::CallbackReturn::ERROR;
+          return CallbackReturn::ERROR;
         }
 
         if (info_.joints[i].state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
@@ -52,7 +52,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
             rclcpp::get_logger("DiffBotSystemHardware"),
             "Joint '%s' have '%s' as second state interface. '%s' expected.", info_.joints[i].name.c_str(),
             info_.joints[i].state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-          return hardware_interface::CallbackReturn::ERROR;
+          return CallbackReturn::ERROR;
         }
     }
   }
@@ -149,10 +149,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::ex
 }
 
 
-hardware_interface::return_type DiffCanopenSystemMultiRPDO::read(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::read()
 {
-  auto ret_val = CanopenSystem::read(time, period);
+  auto ret_val = CanopenSystem::read();
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
   for (size_t i = 0; i < info_.joints.size(); i++)
@@ -176,10 +175,9 @@ hardware_interface::return_type DiffCanopenSystemMultiRPDO::read(
   return ret_val;
 }
 
-hardware_interface::return_type DiffCanopenSystemMultiRPDO::write(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::write()
 {
-  auto ret_val = CanopenSystem::write(time, period);
+  auto ret_val = CanopenSystem::write();
   
   auto drivers = device_container_->get_registered_drivers();
 
