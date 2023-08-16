@@ -88,10 +88,10 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::expo
       std::stoi(info_.joints[i].parameters["state_interface__velocity__index"]));
     uint8_t velocity_subindex = static_cast<uint8_t>(
       std::stoi(info_.joints[i].parameters["state_interface__velocity__subindex"]));
-    
+
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
     PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
-    
+
     // Make pair
     NODE_PDO_INDICES position_node_pdos(node_id, position_pdo_indices);
     NODE_PDO_INDICES velocity_node_pdos(node_id, velocity_pdo_indices);

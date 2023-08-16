@@ -145,7 +145,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
       std::stoi(info_.joints[i].parameters["state_interface__voltage__index"]));
     uint8_t voltage_subindex = static_cast<uint8_t>(
       std::stoi(info_.joints[i].parameters["state_interface__voltage__subindex"]));  
-    
+
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
     PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
     PDO_INDICES rpm_pdo_indices(rpm_index, rpm_subindex);
@@ -158,7 +158,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_pdo_indices_.emplace_back(rpm_pdo_indices);
     state_pdo_indices_.emplace_back(tempeature_pdo_indices);
     state_pdo_indices_.emplace_back(voltage_pdo_indices);
-    
+
     // Make pair
     NODE_PDO_INDICES position_node_pdos  (node_id, position_pdo_indices);
     NODE_PDO_INDICES velocity_node_pdos  (node_id, velocity_pdo_indices);
@@ -209,12 +209,6 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
-    if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
-    {
-      // skip adding canopen interfaces for non-can joints
-      continue;
-    }
-  
     const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"]));
 
     // Mapping - TODO(): Check interface type
@@ -222,9 +216,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
       std::stoi(info_.joints[i].parameters["command_interface__velocty__index"]));
     uint8_t velocity_ref_subindex = static_cast<uint8_t>(
       std::stoi(info_.joints[i].parameters["command_interface__velocty__subindex"]));
-    
+
     PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
-    
+
     // Make pair
     NODE_PDO_INDICES velocity_ref_node_indices(node_id, velocity_ref_indices);
     velocity_command_.emplace(velocity_ref_node_indices, 0.0);
