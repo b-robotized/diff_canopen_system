@@ -1,55 +1,49 @@
-cmake_minimum_required(VERSION 3.8)
-project(diff_canopen_system)
+cmake_minimum_required(VERSION 3.16)
+project(rpm_powertrain_driver LANGUAGES C CXX)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+  add_compile_options(-Wall -Wextra -Wconversion)
 endif()
 
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(hardware_interface REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(canopen_ros2_control REQUIRED)
-find_package(lely_core_libraries REQUIRED)
-
-add_library(
-  diff_canopen_system
-  SHARED
-  src/DiffCanopenSystem.cpp
-  src/DiffCanopenSystemMultiRPDO.cpp
-)
-target_include_directories(
-  diff_canopen_system
-  PUBLIC
-  include
-)
-ament_target_dependencies(
-  diff_canopen_system
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  canopen_fake_slaves
+  canopen_ros2_control
   hardware_interface
+  lely_core_libraries
+  lifecycle_msgs
+  pluginlib
   rclcpp
   rclcpp_lifecycle
-  canopen_ros2_control
 )
-# prevent pluginlib from using boost
-target_compile_definitions(diff_canopen_system PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(ament_cmake_core REQUIRED)
+find_package(backward_ros REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+add_library(${PROJECT_NAME}_diff_canopen_system SHARED
+  src/DiffCanopenSystem.cpp
+)
+target_compile_features(${PROJECT_NAME}_diff_canopen_system PUBLIC c_std_99 cxx_std_17)
+target_include_directories(${PROJECT_NAME}_diff_canopen_system PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/rpm_powertrain_driver>
+)
+ament_target_dependencies(${PROJECT_NAME}_diff_canopen_system  PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 pluginlib_export_plugin_description_file(
-  hardware_interface diff_canopen_system.xml)
+  hardware_interface ${PROJECT_NAME}.xml)
 
-install(
-  TARGETS
-  diff_canopen_system
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
+add_executable(fake_canopen_inverter_node src/fake_canopen/fake_inverter.cpp)
+target_compile_features(fake_canopen_inverter_node PUBLIC c_std_99 cxx_std_17)
+target_include_directories(fake_canopen_inverter_node PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/rpm_powertrain_driver>
 )
-
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
+ament_target_dependencies(fake_canopen_inverter_node  PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -73,24 +67,29 @@ if(BUILD_TESTING)
   )
 endif()
 
-ament_export_include_directories(
-  include
-)
-ament_export_libraries(
-  diff_canopen_system
-)
-ament_export_dependencies(
-  hardware_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
-)
+## INSTALL ##
 
-generate_dcf(test_diff_canopen_system)
+cogen_dcf(fake_rpm_system)
 
-### INSTALL ###
-install(DIRECTORY launch urdf
+install(DIRECTORY launch ros2_control_config urdf
   DESTINATION share/${PROJECT_NAME}/
 )
+install(
+  DIRECTORY include/
+  DESTINATION include/rpm_powertrain_driver
+)
+install(
+  TARGETS ${PROJECT_NAME}_diff_canopen_system
+  EXPORT export_rpm_powertrain_driver
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+install(
+  TARGETS fake_canopen_inverter_node
+  RUNTIME DESTINATION lib/rpm_powertrain_driver
+)
 
+ament_export_targets(export_rpm_powertrain_driver HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

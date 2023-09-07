@@ -118,6 +118,8 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
       continue;
     }
 
+    RCLCPP_INFO(kLogger, "Exporting state interfaces.");
+
     const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
 
     // Mapping

@@ -1,4 +1,4 @@
-# diff_canopen_system
+# rpm_powertrain_driver
 
 To bring up the system, we need to be aware of these things
 1. Currently, we prepared the request message to get the motor status. We have to put the proper index and data to request for the states. Look up for

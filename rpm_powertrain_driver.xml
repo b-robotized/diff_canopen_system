@@ -1,12 +1,12 @@
-<library path="diff_canopen_system">
-  <class name="diff_canopen_system/DiffCanopenSystem"
+<library path="rpm_powertrain_driver_diff_canopen_system">
+  <class name="rpm_powertrain_driver/DiffCanopenSystem"
          type="diff_canopen_system::DiffCanopenSystem"
          base_class_type="hardware_interface::SystemInterface">
     <description>
       ros2_control hardware interface.
     </description>
   </class>
-  <class name="diff_canopen_system/DiffCanopenSystemMultiRPDO"
+  <class name="rpm_powertrain_driver/DiffCanopenSystemMultiRPDO"
          type="diff_canopen_system::DiffCanopenSystemMultiRPDO"
          base_class_type="hardware_interface::SystemInterface">
     <description>

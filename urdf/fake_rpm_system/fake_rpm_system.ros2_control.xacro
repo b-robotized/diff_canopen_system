@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:macro name="canopen_ros2_control_test" params="
+              name
+              prefix
+              bus_config
+              master_config
+              can_interface_name
+              master_bin">
+
+  <ros2_control name="${name}" type="system">
+    <hardware>
+      <plugin>rpm_powertrain_driver/DiffCanopenSystem</plugin>
+      <param name="bus_config">${bus_config}</param>
+      <param name="master_config">${master_config}</param>
+      <param name="can_interface_name">${can_interface_name}</param>
+      <param name="master_bin">"${master_bin}"</param>
+    </hardware>
+    <joint name="${prefix}left_caterpillar">
+      <param name="node_id">0x26</param>
+      <param name="command_interface__target_speed__index">0x3366</param>
+      <param name="command_interface__target_speed__subindex">0x0</param>
+      <command_interface name="velocity"/>
+
+      <param name="state_interface__rotor_position__index">0x3523</param>
+      <param name="state_interface__rotor_position__subindex">0x0</param>
+      <state_interface name="position"/>
+
+      <param name="state_interface__velocity__index">0x37DD</param>
+      <param name="state_interface__velocity__subindex">0x0</param>
+      <state_interface name="velocity"/>
+
+      <param name="state_interface__temperature__index">0x3536</param>
+      <param name="state_interface__temperature__subindex">0x0</param>
+      <state_interface name="temperature"/>
+
+      <param name="state_interface__voltage__index">0x3398</param>
+      <param name="state_interface__voltage__subindex">0x0</param>
+      <state_interface name="battery_status"/>
+
+      <param name="state_interface__rpm__index">0x352F</param>
+      <param name="state_interface__rpm__subindex">0x0</param>
+      <state_interface name="rpm"/>
+    </joint>
+
+    <joint name="${prefix}right_caterpillar">
+      <param name="node_id">0x27</param>
+      <param name="command_interface__target_speed__index">0x3366</param>
+      <param name="command_interface__target_speed__subindex">0x0</param>
+      <command_interface name="velocity"/>
+
+      <param name="state_interface__rotor_position__index">0x3523</param>
+      <param name="state_interface__rotor_position__subindex">0x0</param>
+      <state_interface name="position"/>
+
+      <param name="state_interface__velocity__index">0x37DD</param>
+      <param name="state_interface__velocity__subindex">0x0</param>
+      <state_interface name="velocity"/>
+
+      <param name="state_interface__temperature__index">0x3536</param>
+      <param name="state_interface__temperature__subindex">0x0</param>
+      <state_interface name="temperature"/>
+
+      <param name="state_interface__voltage__index">0x3398</param>
+      <param name="state_interface__voltage__subindex">0x0</param>
+      <state_interface name="battery_status"/>
+
+      <param name="state_interface__rpm__index">0x352F</param>
+      <param name="state_interface__rpm__subindex">0x0</param>
+      <state_interface name="rpm"/>
+    </joint>
+  </ros2_control>
+
+</xacro:macro>
+
+</robot>
