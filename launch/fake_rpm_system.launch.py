@@ -188,8 +188,8 @@ def launch_setup(context, *args, **kwargs):
         diff_base_controller_spawner,
         left_caterpillar_controller,
         right_caterpillar_controller,
-        # slave_node_1,
-        # slave_node_2,
+        slave_node_1,
+        slave_node_2,
     ]
 
     return nodes_to_start
@@ -230,14 +230,14 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ros2_control_config_directory",
-            default_value="config_ros2_control",
+            default_value="ros2_control_config",
             description="Path to ros2_control configuration.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "ros2_control_config_file",
-            default_value="ros2_controllers.yaml",
+            default_value="rpm_ros2_controllers.yaml",
             description="Path to ros2_control configuration.",
         )
     )

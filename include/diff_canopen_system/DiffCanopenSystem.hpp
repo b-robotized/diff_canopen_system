@@ -137,6 +137,8 @@ private:
   uint32_t convert_percentage_to_speed_value(const double percentage);
 
   std::vector<PDO_INDICES> state_pdo_indices_;
+
+  bool enable_write_ = false;
 };
 
 }  // namespace diff_canopen_system

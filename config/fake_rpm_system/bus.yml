@@ -9,7 +9,7 @@ master:
   reset_communication: false
 
 defaults:
-  dcf: "fake_inverter.eds"
+  dcf: "inverter.eds"
   driver: "ros2_canopen::ProxyDriver"
   package: "canopen_proxy_driver"
   polling: true
