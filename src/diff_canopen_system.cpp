@@ -21,11 +21,24 @@
 namespace
 {
 auto const kLogger = rclcpp::get_logger("DiffCanopenSystem");
+
+auto const COMMAND_TARGET_SPEED_TAG_INDEX = "command_interface__target_speed__index";
+auto const COMMAND_TARGET_SPEED_TAG_SUBINDEX = "command_interface__target_speed__subindex";
+auto const STATE_VELOCITY_TAG_INDEX = "state_interface__velocity__index";
+auto const STATE_VELOCITY_TAG_SUBINDEX = "state_interface__velocity__subindex";
+auto const STATE_ROTOR_POSITION_TAG_INDEX = "state_interface__rotor_position__index";
+auto const STATE_ROTOR_POSITION_TAG_SUBINDEX = "state_interface__rotor_position__subindex";
+auto const STATE_RPM_TAG_INDEX = "state_interface__rpm__index";
+auto const STATE_RPM_TAG_SUBINDEX = "state_interface__rpm__subindex";
+auto const STATE_TEMPERATURE_TAG_INDEX = "state_interface__temperature__index";
+auto const STATE_TEMPERATURE_TAG_SUBINDEX = "state_interface__temperature__subindex";
+auto const STATE_VOLTAGE_TAG_INDEX = "state_interface__voltage__index";
+auto const STATE_VOLTAGE_TAG_SUBINDEX = "state_interface__voltage__subindex";
 }
 
 namespace diff_canopen_system
 {
-DiffCanopenSystem::DiffCanopenSystem(): CanopenSystem() {};
+DiffCanopenSystem::DiffCanopenSystem() : CanopenSystem() {};
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystem::on_init(
   const hardware_interface::HardwareInfo & info)
@@ -49,18 +62,18 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
     // Check parameters consistency for canopen joints
     if (info_.joints[i].parameters.find("node_id") != info_.joints[i].parameters.end())
     {
-      if (!check_parameter_exist(info_.joints[i].parameters, "command_interface__target_speed__index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "command_interface__target_speed__subindex", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__velocity__index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__velocity__subindex", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__rotor_position__index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__rotor_position__subindex", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__rpm__index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__rpm__subindex", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__temperature__index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__temperature__subindex", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__voltage__index", info_.joints[i].name) ||
-          !check_parameter_exist(info_.joints[i].parameters, "state_interface__voltage__subindex", info_.joints[i].name))
+      if (!check_parameter_exist(info_.joints[i].parameters, COMMAND_TARGET_SPEED_TAG_INDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, COMMAND_TARGET_SPEED_TAG_SUBINDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_VELOCITY_TAG_INDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_VELOCITY_TAG_SUBINDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_ROTOR_POSITION_TAG_INDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_ROTOR_POSITION_TAG_SUBINDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_RPM_TAG_INDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_RPM_TAG_SUBINDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_TEMPERATURE_TAG_INDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_TEMPERATURE_TAG_SUBINDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_VOLTAGE_TAG_INDEX, info_.joints[i].name) ||
+          !check_parameter_exist(info_.joints[i].parameters, STATE_VOLTAGE_TAG_SUBINDEX, info_.joints[i].name))
       {
         init_rval = CallbackReturn::ERROR;
       }
@@ -72,39 +85,6 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
 
   return init_rval;
 }
-
-// void DiffCanopenSystem::initDeviceContainer()
-// {
-//   std::string tmp_master_bin = (info_.hardware_parameters["master_bin"] == "\"\"")
-//   ? ""
-//   : info_.hardware_parameters["master_bin"];
-//
-//   device_container_->init(
-//     info_.hardware_parameters["can_interface_name"], info_.hardware_parameters["master_config"],
-//     info_.hardware_parameters["bus_config"], tmp_master_bin);
-//   auto drivers = device_container_->get_registered_drivers();
-//   RCLCPP_INFO(kLogger, "Number of registered drivers: '%zu'", device_container_->count_drivers());
-//   for (auto it = drivers.begin(); it != drivers.end(); it++)
-//   {
-//     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(it->second);
-//
-//     auto nmt_state_cb = [&](canopen::NmtState nmt_state, uint8_t id)
-//     { canopen_data_[id].nmt_state.set_state(nmt_state); };
-//     // register callback
-//     proxy_driver->register_nmt_state_cb(nmt_state_cb);
-//
-//     auto rpdo_cb = [&](ros2_canopen::COData data, uint8_t id)
-//     { canopen_data_[id].rpdo_data.set_data(data); };
-//     // register callback
-//     proxy_driver->register_rpdo_cb(rpdo_cb);
-//
-//     RCLCPP_INFO(
-//       kLogger, "\nRegistered driver:\n    name: '%s'\n    node_id: '0x%X'",  //
-//       it->second->get_node_base_interface()->get_name(), it->first);
-//   }
-//
-//   RCLCPP_INFO(device_container_->get_logger(), "Initialisation successful.");
-// }
 
 std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_interfaces()
 {
@@ -119,32 +99,37 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     }
 
     const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
-
+    RCLCPP_INFO(kLogger, "State Mapping for NodeID: 0x%X are:", node_id);
     // Mapping
     uint16_t position_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__rotor_position__index"]));
+      std::stoi(info_.joints[i].parameters[STATE_ROTOR_POSITION_TAG_INDEX]));
     uint8_t position_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__rotor_position__subindex"]));
+      std::stoi(info_.joints[i].parameters[STATE_ROTOR_POSITION_TAG_SUBINDEX]));
+    RCLCPP_INFO(kLogger, "Rotor Position:  0x%X:0x%X", position_index, position_subindex);
 
     uint16_t velocity_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__velocity__index"]));
+      std::stoi(info_.joints[i].parameters[STATE_VELOCITY_TAG_INDEX]));
     uint8_t velocity_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__velocity__subindex"]));
+      std::stoi(info_.joints[i].parameters[STATE_VELOCITY_TAG_SUBINDEX]));
+    RCLCPP_INFO(kLogger, "Velocity:  0x%X:0x%X", velocity_index, velocity_subindex);
 
     uint16_t rpm_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__rpm__index"]));
+      std::stoi(info_.joints[i].parameters[STATE_RPM_TAG_INDEX]));
     uint8_t rpm_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__rpm__subindex"]));
+      std::stoi(info_.joints[i].parameters[STATE_RPM_TAG_SUBINDEX]));
+    RCLCPP_INFO(kLogger, "RPM:  0x%X:0x%X", rpm_index, rpm_subindex);
 
     uint16_t temperature_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__temperature__index"]));
+      std::stoi(info_.joints[i].parameters[STATE_TEMPERATURE_TAG_INDEX]));
     uint8_t temperature_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__temperature__subindex"]));
+      std::stoi(info_.joints[i].parameters[STATE_TEMPERATURE_TAG_SUBINDEX]));
+    RCLCPP_INFO(kLogger, "Temperature:  0x%X:0x%X", temperature_index, temperature_subindex);
 
     uint16_t voltage_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__voltage__index"]));
+      std::stoi(info_.joints[i].parameters[STATE_VOLTAGE_TAG_INDEX]));
     uint8_t voltage_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["state_interface__voltage__subindex"]));  
+      std::stoi(info_.joints[i].parameters[STATE_VOLTAGE_TAG_SUBINDEX]));
+    RCLCPP_INFO(kLogger, "Voltage:  0x%X:0x%X", voltage_index, voltage_subindex);
 
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
     PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
@@ -160,11 +145,11 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_pdo_indices_.emplace_back(voltage_pdo_indices);
 
     // Make pair
-    NODE_PDO_INDICES position_node_pdos  (node_id, position_pdo_indices);
-    NODE_PDO_INDICES velocity_node_pdos  (node_id, velocity_pdo_indices);
-    NODE_PDO_INDICES rpm_node_pdos       (node_id, rpm_pdo_indices);
-    NODE_PDO_INDICES tempeature_node_pdos(node_id, tempeature_pdo_indices);
-    NODE_PDO_INDICES voltage_node_pdos   (node_id, voltage_pdo_indices);
+    NODE_PDO_INDICES position_node_pdos  (static_cast<int>(node_id), position_pdo_indices);
+    NODE_PDO_INDICES velocity_node_pdos  (static_cast<int>(node_id), velocity_pdo_indices);
+    NODE_PDO_INDICES rpm_node_pdos       (static_cast<int>(node_id), rpm_pdo_indices);
+    NODE_PDO_INDICES tempeature_node_pdos(static_cast<int>(node_id), tempeature_pdo_indices);
+    NODE_PDO_INDICES voltage_node_pdos   (static_cast<int>(node_id), voltage_pdo_indices);
 
     // Intialize the value
     state_ro_.emplace(position_node_pdos  , 0.0);
@@ -210,12 +195,13 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
     const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"]));
-
+    RCLCPP_INFO(kLogger, "Command Mapping for NodeID: 0x%X are:", node_id);
     // Mapping - TODO(): Check interface type
     uint16_t velocity_ref_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["command_interface__target_speed__index"]));
+      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX]));
     uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["command_interface__target_speed__subindex"]));
+      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX]));
+    RCLCPP_INFO(kLogger, "Target Speed:  0x%X:0x%X", velocity_ref_index, velocity_ref_subindex);
 
     PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
 
@@ -245,7 +231,8 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 hardware_interface::return_type DiffCanopenSystem::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   auto ret_val = CanopenSystem::read(time, period);
-  if (ret_val == hardware_interface::return_type::ERROR)
+  // if not OK then return with error
+  if (ret_val != hardware_interface::return_type::OK)
   {
     RCLCPP_ERROR(kLogger, "Error has hapend in underlaying CanopenSystem::read call. See above for more details.");
     return ret_val;
@@ -261,13 +248,13 @@ hardware_interface::return_type DiffCanopenSystem::read(const rclcpp::Time & tim
     {
       // Get the data from the map
       double data = canopen_data_[node_id].get_rpdo_data(pdo_index.first, pdo_index.second);
-      
+
       // Convert data to desired format
       NODE_PDO_INDICES node_rpdo_indices(node_id, pdo_index); 
       double processed_state = state_converter_[node_rpdo_indices](data);
-      
+
       // Write to state interface
-      state_ro_[node_rpdo_indices] = processed_state;   
+      state_ro_[node_rpdo_indices] = processed_state;
     }
   }
 
@@ -288,26 +275,28 @@ hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & /*
     if (canopen_data_[node_id].nmt_state.reset_command())
     {
       canopen_data_[node_id].nmt_state.reset_fbk = static_cast<double>(proxy_driver->reset_node_nmt_command());
+      enable_write_ = true;
     }
 
     // start nmt
     if (canopen_data_[node_id].nmt_state.start_command())
     {
       canopen_data_[node_id].nmt_state.start_fbk = static_cast<double>(proxy_driver->start_node_nmt_command());
+      enable_write_ = true;
     }
 
     // tpdo data one shot mechanism
-    if (canopen_data_[node_id].tpdo_data.write_command())
+    if (enable_write_)
     {
       // Convert percents command to speed data
       // Command interface (rad/s) -> RPM -> Percentage -> CAN - Data
-      
+
       // Maybe we do not need this mapping
       uint16_t velocity_ref_index = static_cast<uint16_t>(
-        std::stoi(info_.joints[i].parameters["command_interface__velocty__index"]));
+        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX]));
       uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-        std::stoi(info_.joints[i].parameters["command_interface__velocty__subindex"]));
-    
+        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX]));
+
       // Make pair
       PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
       NODE_PDO_INDICES velocity_ref_node_indices(node_id, velocity_ref_indices);
@@ -319,17 +308,19 @@ hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & /*
       double percentage = convert_rpm_to_percentage(rpm);
 
       // Prepare the data
+      canopen_data_[node_id].tpdo_data.index = velocity_ref_index;
+      canopen_data_[node_id].tpdo_data.subindex = velocity_ref_subindex;
       canopen_data_[node_id].tpdo_data.data = convert_percentage_to_speed_value(percentage);
       canopen_data_[node_id].tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
       // Debug Message
-      RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
-      RCLCPP_INFO(kLogger, "Iterator: %u \n Index:    %i \n Subindex: %i \n Data:     %u",
-      node_id,
-      canopen_data_[node_id].tpdo_data.original_data.index_,
-      canopen_data_[node_id].tpdo_data.original_data.subindex_,
-      canopen_data_[node_id].tpdo_data.original_data.data_);
-      RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
+      // RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
+      // RCLCPP_INFO(kLogger, "Iterator: 0x%X; Index: 0x%X; Subindex: 0x%X; Data: %u",
+      //   node_id,
+      //   canopen_data_[node_id].tpdo_data.original_data.index_,
+      //   canopen_data_[node_id].tpdo_data.original_data.subindex_,
+      //   canopen_data_[node_id].tpdo_data.original_data.data_);
+      // RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
     }
   }
 
@@ -346,51 +337,51 @@ uint32_t DiffCanopenSystem::convert_percentage_to_speed_value(const double perce
 double DiffCanopenSystem::convert_rpm_to_rads(const uint32_t rpm)
 {
   double rpm_raw = static_cast<double>(rpm);
-  double rads = rpm_raw/30*M_PI; // = RPM/60*PI*2
+  double rads = rpm_raw * (2 * M_PI); // 1 RPM = 2 PI rad/s
   return rads;
 }
 
 double DiffCanopenSystem::convert_rads_to_rpm(const double rads)
 {
-  double rpm = rads*30/M_PI; // = rads*60/PI/2
+  double rpm = rads/(2 * M_PI);  // 2 PI rad/s = 1 RPM
   return rpm;
+}
+
+double DiffCanopenSystem::convert_rpm_to_percentage(double rpm)
+{
+  // RPM to 1.1 m/s: 1.1 / ((2 * 0.135) * PI) = 1.29681805482
+  double percentage = rpm / 1.29681805482;
+  return percentage;
 }
 
 double DiffCanopenSystem::convert_to_position(double rpdo_data) 
 {
-  // TODO(): Do the convertation here!
+  // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
 double DiffCanopenSystem::convert_to_veloctiy(double rpdo_data)
 {
-  // TODO(): Do the convertation here!
+  // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
 double DiffCanopenSystem::convert_to_RPM(double rpdo_data)
 {
-  // TODO(): Do the convertation here!
+  // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
 double DiffCanopenSystem::convert_to_temperature(double rpdo_data)
 {
-  // TODO(): Do the convertation here!
+  // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
 double DiffCanopenSystem::convert_to_switch_voltage(double rpdo_data)
 {
-  // TODO(): Do the convertation here!
+  // TODO(): Do the conversion here!
   return rpdo_data;
-}
-
-double DiffCanopenSystem::convert_rpm_to_percentage(double rpm)
-{
-  // TODO(): Do the convertation here!
-  double percentage = rpm;
-  return percentage;
 }
 
 }  // namespace diff_canopen_system

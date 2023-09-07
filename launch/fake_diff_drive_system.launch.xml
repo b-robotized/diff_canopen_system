@@ -5,8 +5,8 @@
     <arg name="description_package" default="diff_canopen_system" description="Package where urdf file is stored." />
     <arg name="description_file" default="fake_diff_drive_system" description="Name of the urdf file." />
     <arg name="ros2_control_config_package" default="diff_canopen_system" description="Path to ros2_control configuration." />
-    <arg name="ros2_control_config_directory" default="config_ros2_control" description="Path to ros2_control configuration." />
-    <arg name="ros2_control_config_file" default="ros2_controllers.yaml" description="Path to ros2_control configuration." />
+    <arg name="ros2_control_config_directory" default="config/fake_diff_drive_system" description="Path to ros2_control configuration." />
+    <arg name="ros2_control_config_file" default="ros2_controllers" description="Path to ros2_control configuration." />
     <arg name="bus_config_package" default="diff_canopen_system" description="Path to bus configuration." />
     <arg name="bus_config_directory" default="config/fake_diff_drive_system" description="Path to bus configuration." />
     <arg name="bus_config_file" default="bus.yml" description="Path to bus configuration." />
@@ -22,12 +22,9 @@
         <param name="robot_description" value="$(var robot_description_content)" />
     </node>
 
-    <!-- ROS 2 control configuration -->
-    <let name="ros2_control_config" value="$(find-pkg-share $(var ros2_control_config_package))/$(var ros2_control_config_directory)/$(var ros2_control_config_file)" />
-
     <!-- Nodes -->
     <node pkg="controller_manager" exec="ros2_control_node" output="screen">
-        <param name="ros2_control_config" value="$(var ros2_control_config)-" />
+        <param from="$(find-pkg-share $(var ros2_control_config_package))/$(var ros2_control_config_directory)/$(var ros2_control_config_file).yaml"/>
     </node>
 
     <node pkg="controller_manager" exec="spawner" args="joint_state_broadcaster --controller-manager /controller_manager" />
@@ -36,17 +33,15 @@
     <node pkg="controller_manager" exec="spawner" args="right_wheel_controller -c /controller_manager" />
 
     <!-- Slave nodes (commented out as in the Python file) -->
-    <!--
     <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
         <arg name="node_id" value="0x23" />
-        <arg name="node_name" value="left_caterpillar" />
-        <arg name="slave_config" value="$(find-pkg-share $(arg master_config_package))/$(arg master_config_directory)/fake_motor_controller.eds" />
+        <arg name="node_name" value="left_wheel" />
+        <arg name="slave_config" value="$(find-pkg-share $(var master_config_package))/$(var master_config_directory)/fake_motor_controller.eds" />
     </include>
 
     <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
         <arg name="node_id" value="0x28" />
-        <arg name="node_name" value="right_caterpillar" />
-        <arg name="slave_config" value="$(find-pkg-share $(arg master_config_package))/$(arg master_config_directory)/fake_motor_controller.eds" />
+        <arg name="node_name" value="right_wheel" />
+        <arg name="slave_config" value="$(find-pkg-share $(var master_config_package))/$(var master_config_directory)/fake_motor_controller.eds" />
     </include>
-    -->
 </launch>

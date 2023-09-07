@@ -3,20 +3,18 @@ from launch.substitutions import (
     LaunchConfiguration,
     TextSubstitution,
     PathJoinSubstitution,
-    FindPackageShare,
 )
 import launch.actions
 
 import launch_ros
 import launch_ros.events
 import launch_ros.events.lifecycle
+from launch_ros.substitutions import FindPackageShare
 
 import lifecycle_msgs.msg
 
 
 def generate_launch_description():
-    path_to_test = os.path.dirname(__file__)
-
     node_id_arg = launch.actions.DeclareLaunchArgument(
         "node_id",
         default_value=TextSubstitution(text="2"),
@@ -52,7 +50,7 @@ def generate_launch_description():
         namespace="",
         package="diff_canopen_system",
         output="screen",
-        executable="fake_canopen_inverter_node",
+        executable="fake_canopen_controller_node",
         parameters=[
             {
                 "slave_config": LaunchConfiguration("slave_config"),

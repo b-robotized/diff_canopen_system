@@ -58,7 +58,7 @@ protected:
     {
     uint16_t val =(*this)[idx][subidx];
     (*this)[0x3366][0] = val;
-    RCLCPP_INFO(rclcpp::get_logger("fake_motor_controller"),"the variable was incremented %u.", val);
+    // RCLCPP_INFO(rclcpp::get_logger("fake_inverter"),"the variable was incremented %u.", val);
     this->TpdoEvent(0);
     }
 
