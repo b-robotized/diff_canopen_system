@@ -93,4 +93,6 @@ install(DIRECTORY launch urdf
   DESTINATION share/${PROJECT_NAME}/
 )
 
+# cogen_dcf(test_diff_canopen_system)
+
 ament_package()

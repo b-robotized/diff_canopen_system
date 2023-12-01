@@ -19,8 +19,8 @@
             </hardware>
             <joint name="${prefix}node_1">
                 <param name="node_id">2</param>
-                <param name="command_interface__velocty__index">4000</param>
-                <param name="command_interface__velocty__subindex">0</param>
+                <param name="command_interface__velocity__index">4000</param>
+                <param name="command_interface__velocity__subindex">0</param>
                 <command_interface name="velocity"/>
             
                 <param name="state_interface__position__index">4001</param>

@@ -23,6 +23,7 @@
 
   <exec_depend>canopen_core</exec_depend>
   <exec_depend>canopen_proxy_driver</exec_depend>
+  <exec_depend>canopen_master_driver</exec_depend>
 
   <exec_depend>xacro</exec_depend>
   <exec_depend>controller_manager</exec_depend>
