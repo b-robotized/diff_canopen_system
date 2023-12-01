@@ -1,33 +1,32 @@
-// Copyright (c) 2023, Stogl Robotics Consulting UG (haftungsbeschränkt)
+// Copyright 2023 Stogl Robotics Consulting UG (haftungsbeschränkt)
+// All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Made for Robert Bosch GmbH
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+// Proprietary License
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+// The file is considered confidential.
 
-#ifndef DIFF_CANOPEN_SYSTEM__DIFFCANOPENSYSTEM_HPP_
-#define DIFF_CANOPEN_SYSTEM__DIFFCANOPENSYSTEM_HPP_
+//
+// Author: Dr. Denis (denis.stogl@stoglrobotics.de)
+
+#ifndef RPM_POWERTRAIN_DRIVER__RPM_POWERTRAIN_DIFF_CANOPEN_SYSTEM
+#define RPM_POWERTRAIN_DRIVER__RPM_POWERTRAIN_DIFF_CANOPEN_SYSTEM
 
 #include <string>
 #include <vector>
 
 #include "canopen_ros2_control/canopen_system.hpp"
-#include "diff_canopen_system/visibility_control.h"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "rpm_powertrain_driver/visibility_control.h"
 
-namespace diff_canopen_system
+namespace rpm_powertrain_driver
 {
 
 enum CommandInterfaces
@@ -63,13 +62,13 @@ struct WheelState {
   double velocity_command;
 };
 
-class DiffCanopenSystem : public canopen_ros2_control::CanopenSystem
+class RPMPowertrainDiffCanOpenComponent : public canopen_ros2_control::CanopenSystem
 {
 public:
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  DiffCanopenSystem();
+  RPMPowertrainDiffCanOpenComponent();
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
-  ~DiffCanopenSystem() = default;
+  ~RPMPowertrainDiffCanOpenComponent() = default;
   CANOPEN_ROS2_CONTROL__VISIBILITY_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
@@ -141,6 +140,6 @@ private:
   bool enable_write_ = false;
 };
 
-}  // namespace diff_canopen_system
+}  // namespace rpm_powertrain_driver
 
-#endif  // DIFF_CANOPEN_SYSTEM__DIFFCANOPENSYSTEM_HPP_
+#endif  // RPM_POWERTRAIN_DRIVER__RPM_POWERTRAIN_DIFF_CANOPEN_SYSTEM

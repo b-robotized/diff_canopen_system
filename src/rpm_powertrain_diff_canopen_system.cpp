@@ -1,26 +1,27 @@
-// Copyright (c) 2023, Stogl Robotics Consulting UG (haftungsbeschränkt)
+// Copyright 2023 Stogl Robotics Consulting UG (haftungsbeschränkt)
+// All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Made for Robert Bosch GmbH
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+// Proprietary License
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+// The file is considered confidential.
+
+//
+// Author: Dr. Denis (denis.stogl@stoglrobotics.de)
+
+#include "rpm_powertrain_driver/rpm_powertrain_diff_canopen_system.hpp"
 
 #include <limits>
 #include <vector>
-#include "diff_canopen_system/DiffCanopenSystem.hpp"
+
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace
 {
-auto const kLogger = rclcpp::get_logger("DiffCanopenSystem");
+auto const kLogger = rclcpp::get_logger("RPMPowertrainDiffCanOpenComponent");
 
 auto const COMMAND_TARGET_SPEED_TAG_INDEX = "command_interface__target_speed__index";
 auto const COMMAND_TARGET_SPEED_TAG_SUBINDEX = "command_interface__target_speed__subindex";
@@ -36,11 +37,11 @@ auto const STATE_VOLTAGE_TAG_INDEX = "state_interface__voltage__index";
 auto const STATE_VOLTAGE_TAG_SUBINDEX = "state_interface__voltage__subindex";
 }
 
-namespace diff_canopen_system
+namespace rpm_powertrain_driver
 {
-DiffCanopenSystem::DiffCanopenSystem() : CanopenSystem() {};
+RPMPowertrainDiffCanOpenComponent::RPMPowertrainDiffCanOpenComponent() : CanopenSystem() {};
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystem::on_init(
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn RPMPowertrainDiffCanOpenComponent::on_init(
   const hardware_interface::HardwareInfo & info)
 {
   auto init_rval = CanopenSystem::on_init(info);
@@ -86,7 +87,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
   return init_rval;
 }
 
-std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_interfaces()
+std::vector<hardware_interface::StateInterface> RPMPowertrainDiffCanOpenComponent::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
@@ -159,11 +160,11 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_ro_.emplace(voltage_node_pdos   , 0.0);
 
     // State converter
-    state_converter_.emplace(position_node_pdos  , &DiffCanopenSystem::convert_to_position      );
-    state_converter_.emplace(velocity_node_pdos  , &DiffCanopenSystem::convert_to_veloctiy      );
-    state_converter_.emplace(rpm_node_pdos       , &DiffCanopenSystem::convert_to_RPM           );
-    state_converter_.emplace(tempeature_node_pdos, &DiffCanopenSystem::convert_to_temperature   );
-    state_converter_.emplace(voltage_node_pdos   , &DiffCanopenSystem::convert_to_switch_voltage);
+    state_converter_.emplace(position_node_pdos  , &RPMPowertrainDiffCanOpenComponent::convert_to_position      );
+    state_converter_.emplace(velocity_node_pdos  , &RPMPowertrainDiffCanOpenComponent::convert_to_veloctiy      );
+    state_converter_.emplace(rpm_node_pdos       , &RPMPowertrainDiffCanOpenComponent::convert_to_RPM           );
+    state_converter_.emplace(tempeature_node_pdos, &RPMPowertrainDiffCanOpenComponent::convert_to_temperature   );
+    state_converter_.emplace(voltage_node_pdos   , &RPMPowertrainDiffCanOpenComponent::convert_to_switch_voltage);
 
     // state
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -188,7 +189,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
   return state_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_command_interfaces()
+std::vector<hardware_interface::CommandInterface> RPMPowertrainDiffCanOpenComponent::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
@@ -228,7 +229,7 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 }
 
 
-hardware_interface::return_type DiffCanopenSystem::read()
+hardware_interface::return_type RPMPowertrainDiffCanOpenComponent::read()
 {
   auto ret_val = CanopenSystem::read();
   // if not OK then return with error
@@ -260,14 +261,14 @@ hardware_interface::return_type DiffCanopenSystem::read()
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type DiffCanopenSystem::write()
+hardware_interface::return_type RPMPowertrainDiffCanOpenComponent::write()
 {
   auto drivers = device_container_->get_registered_drivers();
 
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
-    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
-    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[static_cast<short unsigned int>(node_id)]);
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
+    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
     // reset node nmt
     if (canopen_data_[node_id].nmt_state.reset_command())
@@ -312,8 +313,8 @@ hardware_interface::return_type DiffCanopenSystem::write()
       canopen_data_[node_id].tpdo_data.prepare_data();
       proxy_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
       // Debug Message
-      // RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
-      // RCLCPP_INFO(kLogger, "Iterator: 0x%X; Index: 0x%X; Subindex: 0x%X; Data: %u",
+      // RCLCPP_INFO(kLogger, "--- BEGIN of a debug message in HW-write().....");
+      // RCLCPP_INFO(kLogger, "NodeID: 0x%X; Index: 0x%X; Subindex: 0x%X; Data: %u",
       //   node_id,
       //   canopen_data_[node_id].tpdo_data.original_data.index_,
       //   canopen_data_[node_id].tpdo_data.original_data.subindex_,
@@ -325,66 +326,66 @@ hardware_interface::return_type DiffCanopenSystem::write()
   return hardware_interface::return_type::OK;
 }
 
-uint32_t DiffCanopenSystem::convert_percentage_to_speed_value(const double percentage)
+uint32_t RPMPowertrainDiffCanOpenComponent::convert_percentage_to_speed_value(const double percentage)
 {
   double speed_value_raw = round(percentage * 32767);
   uint32_t speed_value = static_cast<uint32_t>(speed_value_raw);
   return speed_value;
 }
 
-double DiffCanopenSystem::convert_rpm_to_rads(const uint32_t rpm)
+double RPMPowertrainDiffCanOpenComponent::convert_rpm_to_rads(const uint32_t rpm)
 {
   double rpm_raw = static_cast<double>(rpm);
   double rads = rpm_raw * (2 * M_PI); // 1 RPM = 2 PI rad/s
   return rads;
 }
 
-double DiffCanopenSystem::convert_rads_to_rpm(const double rads)
+double RPMPowertrainDiffCanOpenComponent::convert_rads_to_rpm(const double rads)
 {
   double rpm = rads/(2 * M_PI);  // 2 PI rad/s = 1 RPM
   return rpm;
 }
 
-double DiffCanopenSystem::convert_rpm_to_percentage(double rpm)
+double RPMPowertrainDiffCanOpenComponent::convert_rpm_to_percentage(double rpm)
 {
   // RPM to 1.1 m/s: 1.1 / ((2 * 0.135) * PI) = 1.29681805482
   double percentage = rpm / 1.29681805482;
   return percentage;
 }
 
-double DiffCanopenSystem::convert_to_position(double rpdo_data) 
+double RPMPowertrainDiffCanOpenComponent::convert_to_position(double rpdo_data)
 {
   // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
-double DiffCanopenSystem::convert_to_veloctiy(double rpdo_data)
+double RPMPowertrainDiffCanOpenComponent::convert_to_veloctiy(double rpdo_data)
 {
   // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
-double DiffCanopenSystem::convert_to_RPM(double rpdo_data)
+double RPMPowertrainDiffCanOpenComponent::convert_to_RPM(double rpdo_data)
 {
   // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
-double DiffCanopenSystem::convert_to_temperature(double rpdo_data)
+double RPMPowertrainDiffCanOpenComponent::convert_to_temperature(double rpdo_data)
 {
   // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
-double DiffCanopenSystem::convert_to_switch_voltage(double rpdo_data)
+double RPMPowertrainDiffCanOpenComponent::convert_to_switch_voltage(double rpdo_data)
 {
   // TODO(): Do the conversion here!
   return rpdo_data;
 }
 
-}  // namespace diff_canopen_system
+}  // namespace rpm_powertrain_driver
 
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  diff_canopen_system::DiffCanopenSystem, hardware_interface::SystemInterface)
+  rpm_powertrain_driver::RPMPowertrainDiffCanOpenComponent, hardware_interface::SystemInterface)

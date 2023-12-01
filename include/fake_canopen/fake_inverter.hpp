@@ -120,7 +120,7 @@ protected:
     ActiveCheckTask checktask(&ctx, &exec, this);
 
     // timer.submit_wait()
-    RCLCPP_INFO(this->get_logger(), "Created slave for node_id %i.", node_id_-12);
+    RCLCPP_INFO(this->get_logger(), "Created slave for node_id 0x%X.", node_id_);
     loop.run();
     ctx.shutdown();
     RCLCPP_INFO(this->get_logger(), "Stopped CANopen Event Loop.");

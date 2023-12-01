@@ -25,7 +25,7 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
 endforeach()
 
 add_library(${PROJECT_NAME}_diff_canopen_system SHARED
-  src/DiffCanopenSystem.cpp
+  src/rpm_powertrain_diff_canopen_system.cpp
 )
 target_compile_features(${PROJECT_NAME}_diff_canopen_system PUBLIC c_std_99 cxx_std_17)
 target_include_directories(${PROJECT_NAME}_diff_canopen_system PUBLIC
@@ -57,10 +57,10 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
 
-  ament_add_gmock(test_DiffCanopenSystem test/test_DiffCanopenSystem.cpp)
-  target_include_directories(test_DiffCanopenSystem PRIVATE include)
+  ament_add_gmock(test_rpm_powertrain_diff_canopen_system test/test_rpm_powertrain_diff_canopen_system.cpp)
+  target_include_directories(test_rpm_powertrain_diff_canopen_system PRIVATE include)
   ament_target_dependencies(
-    test_DiffCanopenSystem
+    test_rpm_powertrain_diff_canopen_system
     hardware_interface
     pluginlib
     ros2_control_test_assets
@@ -68,10 +68,7 @@ if(BUILD_TESTING)
 endif()
 
 ## INSTALL ##
-
-cogen_dcf(fake_rpm_system)
-
-install(DIRECTORY launch ros2_control_config urdf
+install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}/
 )
 install(
