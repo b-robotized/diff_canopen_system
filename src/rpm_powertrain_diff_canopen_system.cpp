@@ -229,9 +229,9 @@ std::vector<hardware_interface::CommandInterface> RPMPowertrainDiffCanOpenCompon
 }
 
 
-hardware_interface::return_type RPMPowertrainDiffCanOpenComponent::read()
+hardware_interface::return_type RPMPowertrainDiffCanOpenComponent::read(const rclcpp::Time& t, const rclcpp::Duration& d)
 {
-  auto ret_val = CanopenSystem::read();
+  auto ret_val = CanopenSystem::read(t, d);
   // if not OK then return with error
   if (ret_val != hardware_interface::return_type::OK)
   {

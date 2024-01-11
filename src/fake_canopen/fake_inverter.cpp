@@ -18,11 +18,11 @@
 int main(int argc, char * argv[])
 {
   rclcpp::InitOptions options;
-  options.shutdown_on_sigint = true;
+  options.shutdown_on_signal = true;
   // rclcpp::init(argc, argv, options, rclcpp::SignalHandlerOptions::All);
   rclcpp::init(argc, argv, options);
   rclcpp::executors::SingleThreadedExecutor executor;
-  auto canopen_slave = std::make_shared<ros2_canopen::BasicSlave>("Fake_Inverter");
+  auto canopen_slave = std::make_shared<diff_canopen_system::BasicSlave>("Fake_Inverter");
   executor.add_node(canopen_slave->get_node_base_interface());
   executor.spin();
   return 0;

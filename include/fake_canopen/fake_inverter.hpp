@@ -30,7 +30,7 @@
 
 using namespace lely;
 using namespace std::chrono_literals;
-namespace ros2_canopen
+namespace diff_canopen_system
 {
 class FakeInverter : public canopen::BasicSlave
 {
@@ -55,11 +55,11 @@ protected:
   }
 };
 
-class BasicSlave : public BaseSlave
+class BasicSlave : public ros2_canopen::BaseSlave
 {
 public:
   explicit BasicSlave(const std::string & node_name, bool intra_process_comms = false)
-  : BaseSlave(node_name, intra_process_comms)
+  : ros2_canopen::BaseSlave(node_name, intra_process_comms)
   {
   }
 
@@ -127,6 +127,6 @@ protected:
     rclcpp::shutdown();
   }
 };
-}  // namespace ros2_canopen
+}  // namespace diff_canopen_system
 
 #endif
