@@ -14,7 +14,7 @@
 
 #include <limits>
 #include <vector>
-#include "diff_canopen_system/DiffCanopenSystem.hpp"
+#include "diff_canopen_system/diff_canopen_system.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -110,7 +110,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
-  for (uint i = 0; i < info_.joints.size(); i++)
+  for (size_t i = 0; i < info_.joints.size(); i++)
   {
     if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
     {
@@ -118,7 +118,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
       continue;
     }
 
-    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
 
     // Mapping
     uint16_t position_index = static_cast<uint16_t>(
@@ -242,14 +242,20 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 }
 
 
-hardware_interface::return_type DiffCanopenSystem::read()
+hardware_interface::return_type DiffCanopenSystem::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  auto ret_val = CanopenSystem::read();
+  auto ret_val = CanopenSystem::read(time, period);
+  if (ret_val == hardware_interface::return_type::ERROR)
+  {
+    RCLCPP_ERROR(kLogger, "Error has hapend in underlaying CanopenSystem::read call. See above for more details.");
+    return ret_val;
+  }
+
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
-    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
 
     for (auto pdo_index : state_pdo_indices_)
     {
@@ -268,13 +274,14 @@ hardware_interface::return_type DiffCanopenSystem::read()
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type DiffCanopenSystem::write()
+hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   auto drivers = device_container_->get_registered_drivers();
 
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
-    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
+    // TODO(dr.denis): Can we here avoid parsing of the node_id?
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
     // reset node nmt

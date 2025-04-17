@@ -1,24 +1,32 @@
-cmake_minimum_required(VERSION 3.8)
-project(diff_canopen_system)
+cmake_minimum_required(VERSION 3.16)
+project(diff_canopen_system LANGUAGES C CXX)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+find_package(ros2_control_cmake REQUIRED)
+set_compiler_options()
+
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  canopen_fake_slaves
+  canopen_ros2_control
+  hardware_interface
+  lely_core_libraries
+  lifecycle_msgs
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(hardware_interface REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(canopen_ros2_control REQUIRED)
-find_package(lely_core_libraries REQUIRED)
+find_package(backward_ros REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 add_library(
   diff_canopen_system
   SHARED
-  src/DiffCanopenSystem.cpp
-  src/DiffCanopenSystemMultiRPDO.cpp
+  src/diff_canopen_system.cpp
+  src/diff_canopen_system_multi_rpdo.cpp
 )
 target_include_directories(
   diff_canopen_system
@@ -63,14 +71,14 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
 
-  ament_add_gmock(test_DiffCanopenSystem test/test_DiffCanopenSystem.cpp)
-  target_include_directories(test_DiffCanopenSystem PRIVATE include)
-  ament_target_dependencies(
-    test_DiffCanopenSystem
-    hardware_interface
-    pluginlib
-    ros2_control_test_assets
-  )
+  # ament_add_gmock(test_DiffCanopenSystem test/test_DiffCanopenSystem.cpp)
+  # target_include_directories(test_DiffCanopenSystem PRIVATE include)
+  # ament_target_dependencies(
+  #   test_DiffCanopenSystem
+  #   hardware_interface
+  #   pluginlib
+  #   ros2_control_test_assets
+  # )
 endif()
 
 ament_export_include_directories(

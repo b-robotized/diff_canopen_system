@@ -14,20 +14,20 @@
 
 #include <limits>
 #include <vector>
-#include "diff_canopen_system/DiffCanopenSystemMultipRPDO.hpp"
+#include "diff_canopen_system/diff_canopen_system_multi_rpdo.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace
 {
-auto const kLogger = rclcpp::get_logger("DiffCanopenSystemAbstractPDOMapping");
+auto const kLogger = rclcpp::get_logger("DiffCanopenSystemMultiRPDO");
 }
 
 namespace diff_canopen_system
 {
-DiffCanopenSystemAbstractPDOMapping::DiffCanopenSystemAbstractPDOMapping(): CanopenSystem() {};
+DiffCanopenSystemMultiRPDO::DiffCanopenSystemMultiRPDO(): CanopenSystem() {};
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystemAbstractPDOMapping::on_init(
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCanopenSystemMultiRPDO::on_init(
   const hardware_interface::HardwareInfo & info)
 {
   auto init_rval = CanopenSystem::on_init(info);
@@ -40,7 +40,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
       if (info_.joints[i].state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
       {
         RCLCPP_FATAL(
-            rclcpp::get_logger("DiffBotSystemHardware"),
+            kLogger,
             "Joint '%s' have '%s' as first state interface. '%s' expected.", info_.joints[i].name.c_str(),
             info_.joints[i].state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
           return CallbackReturn::ERROR;
@@ -49,7 +49,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
         if (info_.joints[i].state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
         {
           RCLCPP_FATAL(
-            rclcpp::get_logger("DiffBotSystemHardware"),
+            kLogger,
             "Joint '%s' have '%s' as second state interface. '%s' expected.", info_.joints[i].name.c_str(),
             info_.joints[i].state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
           return CallbackReturn::ERROR;
@@ -61,7 +61,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
 }
 
 
-std::vector<hardware_interface::StateInterface> DiffCanopenSystemAbstractPDOMapping::export_state_interfaces()
+std::vector<hardware_interface::StateInterface> DiffCanopenSystemMultiRPDO::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
@@ -75,8 +75,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemAbstractPDOMapp
       // skip adding canopen interfaces
       continue;
     }
-
-    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
 
     // Mapping
     uint16_t position_index = static_cast<uint16_t>(
@@ -88,10 +87,10 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemAbstractPDOMapp
       std::stoi(info_.joints[i].parameters["state_interface__velocity__index"]));
     uint8_t velocity_subindex = static_cast<uint8_t>(
       std::stoi(info_.joints[i].parameters["state_interface__velocity__subindex"]));
-    
+
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
     PDO_INDICES velocity_pdo_indices(velocity_index, velocity_subindex);
-    
+
     // Make pair
     NODE_PDO_INDICES position_node_pdos(node_id, position_pdo_indices);
     NODE_PDO_INDICES velocity_node_pdos(node_id, velocity_pdo_indices);
@@ -106,12 +105,12 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystemAbstractPDOMapp
       &state_ro_[position_node_pdos]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
-      &state_ro_[velocity_node_pdos]));
+      &state_ro_[position_node_pdos]));
   }
   return state_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface> DiffCanopenSystemAbstractPDOMapping::export_command_interfaces()
+std::vector<hardware_interface::CommandInterface> DiffCanopenSystemMultiRPDO::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
@@ -130,9 +129,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemAbstractPDOMa
 
     // Mapping - TODO(): Check interface type
     uint16_t velocity_ref_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["command_interface__velocty__index"]));
+      std::stoi(info_.joints[i].parameters["command_interface__velocity__index"]));
     uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["command_interface__velocty__subindex"]));
+      std::stoi(info_.joints[i].parameters["command_interface__velocity__subindex"]));
     
     PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
     
@@ -149,8 +148,7 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystemAbstractPDOMa
 }
 
 
-hardware_interface::return_type DiffCanopenSystemAbstractPDOMapping::read(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   auto ret_val = CanopenSystem::read(time, period);
   // Find a mapping between RPDOs and the state variables..
@@ -163,7 +161,7 @@ hardware_interface::return_type DiffCanopenSystemAbstractPDOMapping::read(
       continue;
     }
 
-    const uint node_id = static_cast<uint>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
 
     PDO_INDICES rpod_indices;
     rpod_indices.first = canopen_data_[node_id].rpdo_data.original_data.index_;
@@ -176,14 +174,19 @@ hardware_interface::return_type DiffCanopenSystemAbstractPDOMapping::read(
   return ret_val;
 }
 
-hardware_interface::return_type DiffCanopenSystemAbstractPDOMapping::write(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type DiffCanopenSystemMultiRPDO::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   auto ret_val = CanopenSystem::write(time, period);
+
+  if (ret_val == hardware_interface::return_type::ERROR)
+  {
+    RCLCPP_ERROR(kLogger, "Error has hapend in underlaying CanopenSystem::write call. See above for more details.");
+    return ret_val;
+  }
   
   auto drivers = device_container_->get_registered_drivers();
 
-  // TODO: delete the message that we do not need.
+  // TODO: delete the output messages that we do not need.
 
   for (auto it = canopen_data_.begin(); it != canopen_data_.end(); ++it)
   {
@@ -228,4 +231,4 @@ hardware_interface::return_type DiffCanopenSystemAbstractPDOMapping::write(
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  diff_canopen_system::DiffCanopenSystemAbstractPDOMapping, hardware_interface::SystemInterface)
+  diff_canopen_system::DiffCanopenSystemMultiRPDO, hardware_interface::SystemInterface)

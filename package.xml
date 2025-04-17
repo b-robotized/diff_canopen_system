@@ -2,23 +2,21 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>diff_canopen_system</name>
-  <version>0.0.0</version>
-  <description>A package for differential drive using ros2_canopen</description>
+  <version>0.3.0</version>
+  <description>A package for differential drive using ros2_canopen.</description>
+  <maintainer email="denis.stogl@b-robotized.com">Dr. Denis Stogl</maintainer>
   <maintainer email="xi.huang@stoglrobotics.de">Xi Huang</maintainer>
   <license>""</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <build_depend>lely_core_libraries</build_depend>
+  <build_depend>ros2_control_cmake</build_depend>
 
   <depend>hardware_interface</depend>
-
   <depend>pluginlib</depend>
-
   <depend>rclcpp</depend>
-
   <depend>rclcpp_lifecycle</depend>
-
   <depend>canopen_ros2_control</depend>
 
   <exec_depend>canopen_core</exec_depend>
