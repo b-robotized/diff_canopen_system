@@ -6,13 +6,14 @@
   <description>A package for differential drive using ros2_canopen.</description>
   <maintainer email="denis.stogl@b-robotized.com">Dr. Denis Stogl</maintainer>
   <maintainer email="xi.huang@stoglrobotics.de">Xi Huang</maintainer>
-  <license>""</license>
+  <license>Propriatary</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <build_depend>lely_core_libraries</build_depend>
   <build_depend>ros2_control_cmake</build_depend>
 
+  <depend>canopen_fake_slaves</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
@@ -30,8 +31,6 @@
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
   <exec_depend>forward_command_controller</exec_depend>
-
-  <exec_depend>canopen_fake_slaves</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

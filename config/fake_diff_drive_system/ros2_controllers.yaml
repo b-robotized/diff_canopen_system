@@ -1,0 +1,22 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    left_wheel_controller:
+      type: canopen_ros2_controllers/CanopenProxyController
+
+    right_wheel_controller:
+      type: canopen_ros2_controllers/CanopenProxyController
+
+
+left_wheel_controller:
+  ros__parameters:
+    joint: left_wheel
+
+
+right_wheel_controller:
+  ros__parameters:
+    joint: right_wheel

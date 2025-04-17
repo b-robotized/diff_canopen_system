@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "canopen_ros2_control/canopen_system.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -25,7 +26,6 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
-#include "canopen_ros2_control/canopen_system.hpp"
 
 namespace diff_canopen_system
 {

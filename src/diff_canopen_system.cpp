@@ -213,9 +213,9 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 
     // Mapping - TODO(): Check interface type
     uint16_t velocity_ref_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters["command_interface__velocty__index"]));
+      std::stoi(info_.joints[i].parameters["command_interface__target_speed__index"]));
     uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters["command_interface__velocty__subindex"]));
+      std::stoi(info_.joints[i].parameters["command_interface__target_speed__subindex"]));
 
     PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
 

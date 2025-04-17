@@ -3,14 +3,14 @@
          type="diff_canopen_system::DiffCanopenSystem"
          base_class_type="hardware_interface::SystemInterface">
     <description>
-      ros2_control hardware interface.
+      ros2_control hardware interface for custom Diff-Drive CanOpen System.
     </description>
   </class>
   <class name="diff_canopen_system/DiffCanopenSystemMultiRPDO"
          type="diff_canopen_system::DiffCanopenSystemMultiRPDO"
          base_class_type="hardware_interface::SystemInterface">
     <description>
-      ros2_control hardware interface.
+      ros2_control hardware interface for custom Diff-Drive CanOpen System with multiple RPDOs.
     </description>
   </class>
 </library>

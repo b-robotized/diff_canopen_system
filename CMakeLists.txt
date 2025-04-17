@@ -22,42 +22,30 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-add_library(
-  diff_canopen_system
-  SHARED
+#  Diff System
+add_library(diff_canopen_system SHARED
   src/diff_canopen_system.cpp
   src/diff_canopen_system_multi_rpdo.cpp
 )
-target_include_directories(
-  diff_canopen_system
-  PUBLIC
-  include
+target_compile_features(diff_canopen_system PUBLIC c_std_99 cxx_std_17)
+target_include_directories(diff_canopen_system PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/diff_canopen_system>
 )
-ament_target_dependencies(
-  diff_canopen_system
-  hardware_interface
-  rclcpp
-  rclcpp_lifecycle
-  canopen_ros2_control
-)
-# prevent pluginlib from using boost
-target_compile_definitions(diff_canopen_system PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+ament_target_dependencies(diff_canopen_system  PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+# ros2_control plugins
 pluginlib_export_plugin_description_file(
-  hardware_interface diff_canopen_system.xml)
+  hardware_interface ${PROJECT_NAME}.xml)
 
-install(
-  TARGETS
-  diff_canopen_system
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
+# Fake Inverter Node for testing
+add_executable(fake_canopen_controller_node src/fake_canopen/fake_motor_controller.cpp)
+target_compile_features(fake_canopen_controller_node PUBLIC c_std_99 cxx_std_17)
+target_include_directories(fake_canopen_controller_node PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/diff_canopen_system>
 )
-
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
+ament_target_dependencies(fake_canopen_controller_node  PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -81,26 +69,31 @@ if(BUILD_TESTING)
   # )
 endif()
 
-ament_export_include_directories(
-  include
-)
-ament_export_libraries(
-  diff_canopen_system
-)
-ament_export_dependencies(
-  hardware_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
-)
+## INSTALL ##
 
-generate_dcf(test_diff_canopen_system)
-
-### INSTALL ###
-install(DIRECTORY launch urdf
-  DESTINATION share/${PROJECT_NAME}/
-)
-
+cogen_dcf(fake_diff_drive_system)
 # cogen_dcf(test_diff_canopen_system)
 
+install(DIRECTORY launch ros2_control_config urdf
+  DESTINATION share/diff_canopen_system/
+)
+install(
+  DIRECTORY include/
+  DESTINATION include/diff_canopen_system
+)
+install(
+  TARGETS diff_canopen_system
+  EXPORT export_diff_canopen_system
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+install(
+  TARGETS fake_canopen_controller_node
+  RUNTIME DESTINATION lib/diff_canopen_system
+)
+
+
+ament_export_targets(export_diff_canopen_system HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

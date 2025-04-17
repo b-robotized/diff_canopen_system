@@ -1,4 +1,4 @@
-# diff_canopen_system
+# rpm_powertrain_driver
 
 To bring up the system, we need to be aware of these things
 1. Currently, we prepared the request message to get the motor status. We have to put the proper index and data to request for the states. Look up for
@@ -15,3 +15,15 @@ Look up the following functions to make the convertion complete:
 - read_error_status
 - read_motor_battery_states
  
+
+## Testing with fake  diff drive system
+
+### Setup the vcan0 interface
+```
+sudo modprobe vcan
+sudo ip link add dev vcan0 type vcan
+sudo ip link set vcan0 txqueuelen 1000
+sudo ip link set up vcan0
+```
+
+
