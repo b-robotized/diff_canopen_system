@@ -27,3 +27,14 @@ sudo ip link set up vcan0
 ```
 
 
+### Start teh `diff_drive_system` with fake motor controllers
+```
+ros2 launch diff_canopen_system fake_diff_drive_system.launch.xml
+```
+
+
+# TODOs to make driver more robust
+- don't crash where there is no can device
+- don't crash if data can not be parsed
+
+
