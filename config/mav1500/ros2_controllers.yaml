@@ -37,6 +37,8 @@ diff_base_controller:
     left_wheel_names: ["left_wheel"]
     right_wheel_names: ["right_wheel"]
 
+    position_feedback: False
+
     wheel_separation: 0.325  # 650 mm
     wheel_radius: 0.135      # 270 mm
 

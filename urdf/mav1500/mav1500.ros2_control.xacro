@@ -19,56 +19,66 @@
     </hardware>
     <joint name="${prefix}left_wheel">
       <param name="node_id">0x1E</param>  <!--30-->
-      <param name="command_interface__target_speed__index">0x3366</param>  <!--13158-->
-      <param name="command_interface__target_speed__subindex">0x0</param>   <!--0x0-->
-      <command_interface name="velocity"/>
 
-      <param name="state_interface__rotor_position__index">13603</param>   <!--0x3523-->
-      <param name="state_interface__rotor_position__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="position"/>
+      <!-- convert this to -->
+      <!-- <command_interface name="velocity">
+        <param name="index">0x2110</param>
+        <param name="subindex">0x0</param>
+        <param min="-8000" />
+        <param max="8000" />
+        <param unit="rpm" />
+        <param hw_data_type="int16_t" />
+      </command_interface> -->
+      <param name="command_interface__target_speed__index">0x2110</param> 
+      <param name="command_interface__target_speed__subindex">0x0</param> 
+      <command_interface name="velocity"/>  <!-- -8000 to 8000 rpm -->
 
-      <param name="state_interface__velocity__index">14301</param>   <!--0x37DD-->
-      <param name="state_interface__velocity__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="velocity"/>
+      <param name="state_interface__actual_speed__index">0x211D</param> 
+      <param name="state_interface__actual_speed__subindex">0x0</param>
+      <state_interface name="velocity"/>  <!-- -10000 to 10000 rpm -->
 
-      <param name="state_interface__temperature__index">13622</param>   <!--0x3536-->
-      <param name="state_interface__temperature__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="temperature"/>
+      <param name="state_interface__torque__index">0x211E</param> 
+      <param name="state_interface__torque__subindex">0x0</param>
+      <state_interface name="effort"/>  <!-- -32767 to 32767 - 0.01 Nm -->
 
-      <param name="state_interface__voltage__index">13208</param>   <!--0x3398-->
-      <param name="state_interface__voltage__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="voltage"/>
+      <param name="state_interface__inverter_temperature__index">0x2122</param> 
+      <param name="state_interface__inverter_temperature__subindex">0x0</param>
+      <state_interface name="inverter_temperature"/>
 
-      <param name="state_interface__rpm__index">13615</param>   <!--0x352F-->
-      <param name="state_interface__rpm__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="rpm"/>
+      <param name="state_interface__motor_temperature__index">0x2123</param>
+      <param name="state_interface__motor_temperature__subindex">0x0</param> 
+      <state_interface name="motor_temperature"/>
+
+      <param name="state_interface__battery_voltage__index">0x2124</param>  
+      <param name="state_interface__battery_voltage__subindex">0x0</param>
+      <state_interface name="battery_voltage"/>
     </joint>
 
     <joint name="${prefix}right_wheel">
-      <param name="node_id">31</param>  <!--0x1F-->
-      <param name="command_interface__target_speed__index">13158</param>  <!--0x3366-->
-      <param name="command_interface__target_speed__subindex">0</param>   <!--0x0-->
-      <command_interface name="velocity"/>
+      <param name="node_id">0x1F</param>  <!--31-->
+<param name="command_interface__target_speed__index">0x2110</param> 
+      <param name="command_interface__target_speed__subindex">0x0</param> 
+      <command_interface name="velocity"/>  <!-- -8000 to 8000 rpm -->
 
-      <param name="state_interface__rotor_position__index">13603</param>   <!--0x3523-->
-      <param name="state_interface__rotor_position__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="position"/>
+      <param name="state_interface__actual_speed__index">0x211D</param> 
+      <param name="state_interface__actual_speed__subindex">0x0</param>
+      <state_interface name="velocity"/>  <!-- -10000 to 10000 rpm -->
 
-      <param name="state_interface__velocity__index">14301</param>   <!--0x37DD-->
-      <param name="state_interface__velocity__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="velocity"/>
+      <param name="state_interface__torque__index">0x211E</param> 
+      <param name="state_interface__torque__subindex">0x0</param>
+      <state_interface name="effort"/>  <!-- -32767 to 32767 - 0.01 Nm -->
 
-      <param name="state_interface__temperature__index">13622</param>   <!--0x3536-->
-      <param name="state_interface__temperature__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="temperature"/>
+      <param name="state_interface__inverter_temperature__index">0x2122</param> 
+      <param name="state_interface__inverter_temperature__subindex">0x0</param>
+      <state_interface name="inverter_temperature"/>
 
-      <param name="state_interface__voltage__index">13208</param>   <!--0x3398-->
-      <param name="state_interface__voltage__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="voltage"/>
+      <param name="state_interface__motor_temperature__index">0x2123</param>
+      <param name="state_interface__motor_temperature__subindex">0x0</param> 
+      <state_interface name="motor_temperature"/>
 
-      <param name="state_interface__rpm__index">13615</param>   <!--0x352F-->
-      <param name="state_interface__rpm__subindex">0x0</param>   <!--0x0-->
-      <state_interface name="rpm"/>
+      <param name="state_interface__battery_voltage__index">0x2124</param>  
+      <param name="state_interface__battery_voltage__subindex">0x0</param>
+      <state_interface name="battery_voltage"/>
     </joint>
   </ros2_control>
 

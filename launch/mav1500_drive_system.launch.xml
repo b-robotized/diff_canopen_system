@@ -13,6 +13,8 @@
     <arg name="master_config_file" default="master.dcf" description="Path to master configuration file (*.dcf)" />
     <arg name="can_interface_name" default="vcan0" description="Interface name for can" />
 
+    <arg name="simulation" default="false" description="Simulation mode." />
+
     <!-- Robot description -->
     <let name="robot_description_content" value="$(command '$(find-exec xacro) $(find-pkg-share $(var description_package))/urdf/$(var description_file).urdf.xacro name:=$(var name) prefix:=$(var prefix) bus_config:=$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/$(var bus_config_file) master_config:=$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/$(var master_config_file) can_interface_name:=$(var can_interface_name)')" />
 
@@ -30,18 +32,20 @@
     <node pkg="controller_manager" exec="spawner" args="left_wheel_controller -c /controller_manager" />
     <node pkg="controller_manager" exec="spawner" args="right_wheel_controller -c /controller_manager" />
 
-    <!-- Slave nodes (commented out as in the Python file) -->
-    <!-- 30 - has to be the same as in the ros2_control urdf tag -->
-    <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
-        <arg name="node_id" value="0x1E" />
-        <arg name="node_name" value="left_wheel" />
-        <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/EDS_20014_Standard_CANopen_V212_01.eds" />
-    </include>
+    <group if="$(var simulation)">
+      <!-- Slave nodes for simulation -->
+      <!-- 30 - has to be the same as in the ros2_control urdf tag -->
+      <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
+          <arg name="node_id" value="0x1E" />
+          <arg name="node_name" value="left_wheel" />
+          <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/EDS_20014_Standard_CANopen_V212_01.eds" />
+      </include>
 
-    <!-- 31 - has to be the same as in the ros2_control urdf tag -->
-    <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
-        <arg name="node_id" value="0x1F" />
-        <arg name="node_name" value="right_wheel" />
-        <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/EDS_20014_Standard_CANopen_V212_01.eds" />
-    </include>
+      <!-- 31 - has to be the same as in the ros2_control urdf tag -->
+      <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
+          <arg name="node_id" value="0x1F" />
+          <arg name="node_name" value="right_wheel" />
+          <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/EDS_20014_Standard_CANopen_V212_01.eds" />
+      </include>
+    </group>
 </launch>
