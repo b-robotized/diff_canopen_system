@@ -72,7 +72,7 @@ endif()
 ## INSTALL ##
 
 cogen_dcf(fake_diff_drive_system)
-# cogen_dcf(test_diff_canopen_system)
+cogen_dcf(mav1500)
 
 install(DIRECTORY launch ros2_control_config urdf
   DESTINATION share/diff_canopen_system/

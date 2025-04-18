@@ -32,6 +32,25 @@ sudo ip link set up vcan0
 ros2 launch diff_canopen_system fake_diff_drive_system.launch.xml
 ```
 
+### Send command to the controller
+```
+ros2 topic pub /diff_base_controller/cmd_vel geometry_msgs/msg/TwistStamped "
+header:
+ stamp:
+  sec: 0
+  nanosec: 0
+ frame_id: ''
+twist:
+ linear:
+  x: 0.3
+  y: 0.0
+  z: 0.0
+ angular:
+  x: 0.0
+  y: 0.0
+  z: 0.0"
+```
+
 
 # TODOs to make driver more robust
 - don't crash where there is no can device

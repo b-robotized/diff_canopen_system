@@ -1,14 +1,14 @@
 <launch>
     <!-- Declare launch arguments -->
-    <arg name="name" default="fake_diff_drive_test_system" description="robot name" />
-    <arg name="prefix" default="" description="URDF prefix.." />
+    <arg name="name" default="mav1500_drive_system" description="robot name" />
+    <arg name="prefix" default="" description="URDF prefix." />
     <arg name="description_package" default="diff_canopen_system" description="Package where urdf file is stored." />
-    <arg name="description_file" default="fake_diff_drive_system" description="Name of the urdf file." />
+    <arg name="description_file" default="mav1500" description="Name of the urdf file." />
     <arg name="ros2_control_config_package" default="diff_canopen_system" description="Path to ros2_control configuration." />
-    <arg name="ros2_control_config_directory" default="config/fake_diff_drive_system" description="Path to ros2_control configuration." />
+    <arg name="ros2_control_config_directory" default="config/mav1500" description="Path to ros2_control configuration." />
     <arg name="ros2_control_config_file" default="ros2_controllers" description="Path to ros2_control configuration." />
     <arg name="bus_config_package" default="diff_canopen_system" description="Package of bus configuration and master configuration file (*.dcf)." />
-    <arg name="bus_config_directory" default="config/fake_diff_drive_system" description="Path within the package to bus configuration and master configuration file (*.dcf)" />
+    <arg name="bus_config_directory" default="config/mav1500" description="Path within the package to bus configuration and master configuration file (*.dcf)" />
     <arg name="bus_config_file" default="bus.yml" description="Path to bus configuration." />
     <arg name="master_config_file" default="master.dcf" description="Path to master configuration file (*.dcf)" />
     <arg name="can_interface_name" default="vcan0" description="Interface name for can" />
@@ -31,17 +31,17 @@
     <node pkg="controller_manager" exec="spawner" args="right_wheel_controller -c /controller_manager" />
 
     <!-- Slave nodes (commented out as in the Python file) -->
-    <!-- 35 - has to be the same as in the ros2_control urdf tag -->
+    <!-- 30 - has to be the same as in the ros2_control urdf tag -->
     <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
-        <arg name="node_id" value="0x23" />
+        <arg name="node_id" value="0x1E" />
         <arg name="node_name" value="left_wheel" />
-        <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/fake_motor_controller.eds" />
+        <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/EDS_20014_Standard_CANopen_V212_01.eds" />
     </include>
 
-    <!-- 40 - has to be the same as in the ros2_control urdf tag -->
+    <!-- 31 - has to be the same as in the ros2_control urdf tag -->
     <include file="$(find-pkg-share diff_canopen_system)/launch/fake_motor_controller.launch.py">
-        <arg name="node_id" value="0x28" />
+        <arg name="node_id" value="0x1F" />
         <arg name="node_name" value="right_wheel" />
-        <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/fake_motor_controller.eds" />
+        <arg name="slave_config" value="$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/EDS_20014_Standard_CANopen_V212_01.eds" />
     </include>
 </launch>

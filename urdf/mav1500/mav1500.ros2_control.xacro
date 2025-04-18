@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:macro name="canopen_ros2_control_test" params="
+<xacro:macro name="mav1500_ros2_control" params="
               name
               prefix
               bus_config
@@ -18,9 +18,9 @@
       <param name="master_bin">"${master_bin}"</param>
     </hardware>
     <joint name="${prefix}left_wheel">
-      <param name="node_id">0x23</param>  <!--35-->
+      <param name="node_id">0x1E</param>  <!--30-->
       <param name="command_interface__target_speed__index">0x3366</param>  <!--13158-->
-      <param name="command_interface__target_speed__subindex">0</param>   <!--0x0-->
+      <param name="command_interface__target_speed__subindex">0x0</param>   <!--0x0-->
       <command_interface name="velocity"/>
 
       <param name="state_interface__rotor_position__index">13603</param>   <!--0x3523-->
@@ -45,7 +45,7 @@
     </joint>
 
     <joint name="${prefix}right_wheel">
-      <param name="node_id">0x28</param>  <!--40-->
+      <param name="node_id">31</param>  <!--0x1F-->
       <param name="command_interface__target_speed__index">13158</param>  <!--0x3366-->
       <param name="command_interface__target_speed__subindex">0</param>   <!--0x0-->
       <command_interface name="velocity"/>

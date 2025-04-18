@@ -17,7 +17,7 @@ import lifecycle_msgs.msg
 def generate_launch_description():
     node_id_arg = launch.actions.DeclareLaunchArgument(
         "node_id",
-        default_value=TextSubstitution(text="2"),
+        default_value="2",
         description="CANopen node id the mock slave shall have.",
     )
 

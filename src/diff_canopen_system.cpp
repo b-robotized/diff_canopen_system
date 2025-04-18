@@ -98,37 +98,37 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
       continue;
     }
 
-    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
     RCLCPP_INFO(kLogger, "State Mapping for NodeID: 0x%X are:", node_id);
     // Mapping
     uint16_t position_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters[STATE_ROTOR_POSITION_TAG_INDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_ROTOR_POSITION_TAG_INDEX], nullptr, 0));
     uint8_t position_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters[STATE_ROTOR_POSITION_TAG_SUBINDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_ROTOR_POSITION_TAG_SUBINDEX], nullptr, 0));
     RCLCPP_INFO(kLogger, "Rotor Position:  0x%X:0x%X", position_index, position_subindex);
 
     uint16_t velocity_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters[STATE_VELOCITY_TAG_INDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_VELOCITY_TAG_INDEX], nullptr, 0));
     uint8_t velocity_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters[STATE_VELOCITY_TAG_SUBINDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_VELOCITY_TAG_SUBINDEX], nullptr, 0));
     RCLCPP_INFO(kLogger, "Velocity:  0x%X:0x%X", velocity_index, velocity_subindex);
 
     uint16_t rpm_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters[STATE_RPM_TAG_INDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_RPM_TAG_INDEX], nullptr, 0));
     uint8_t rpm_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters[STATE_RPM_TAG_SUBINDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_RPM_TAG_SUBINDEX], nullptr, 0));
     RCLCPP_INFO(kLogger, "RPM:  0x%X:0x%X", rpm_index, rpm_subindex);
 
     uint16_t temperature_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters[STATE_TEMPERATURE_TAG_INDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_TEMPERATURE_TAG_INDEX], nullptr, 0));
     uint8_t temperature_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters[STATE_TEMPERATURE_TAG_SUBINDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_TEMPERATURE_TAG_SUBINDEX], nullptr, 0));
     RCLCPP_INFO(kLogger, "Temperature:  0x%X:0x%X", temperature_index, temperature_subindex);
 
     uint16_t voltage_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters[STATE_VOLTAGE_TAG_INDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_VOLTAGE_TAG_INDEX], nullptr, 0));
     uint8_t voltage_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters[STATE_VOLTAGE_TAG_SUBINDEX]));
+      std::stoi(info_.joints[i].parameters[STATE_VOLTAGE_TAG_SUBINDEX], nullptr, 0));
     RCLCPP_INFO(kLogger, "Voltage:  0x%X:0x%X", voltage_index, voltage_subindex);
 
     PDO_INDICES position_pdo_indices(position_index, position_subindex);
@@ -194,13 +194,13 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
-    const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
     RCLCPP_INFO(kLogger, "Command Mapping for NodeID: 0x%X are:", node_id);
     // Mapping - TODO(): Check interface type
     uint16_t velocity_ref_index = static_cast<uint16_t>(
-      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX]));
+      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX], nullptr, 0));
     uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX]));
+      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX], nullptr, 0));
     RCLCPP_INFO(kLogger, "Target Speed:  0x%X:0x%X", velocity_ref_index, velocity_ref_subindex);
 
     PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
@@ -242,7 +242,7 @@ hardware_interface::return_type DiffCanopenSystem::read(const rclcpp::Time & tim
   // This for loop read the current value from the different joints.
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
-    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
 
     for (auto pdo_index : state_pdo_indices_)
     {
@@ -268,7 +268,7 @@ hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & /*
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
     // TODO(dr.denis): Can we here avoid parsing of the node_id?
-    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"]));
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
     // reset node nmt
@@ -293,9 +293,9 @@ hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & /*
 
       // Maybe we do not need this mapping
       uint16_t velocity_ref_index = static_cast<uint16_t>(
-        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX]));
+        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX], nullptr, 0));
       uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX]));
+        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX], nullptr, 0));
 
       // Make pair
       PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
