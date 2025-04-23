@@ -11,9 +11,12 @@
     <arg name="bus_config_directory" default="config/mav1500" description="Path within the package to bus configuration and master configuration file (*.dcf)" />
     <arg name="bus_config_file" default="bus.yml" description="Path to bus configuration." />
     <arg name="master_config_file" default="master.dcf" description="Path to master configuration file (*.dcf)" />
-    <arg name="can_interface_name" default="vcan0" description="Interface name for can" />
+    <arg name="can_interface_name" default="can0" description="Interface name for can" />
 
     <arg name="simulation" default="false" description="Simulation mode." />
+    <group if="$(var simulation)">
+        <let name="can_interface_name" value="vcan0" />
+    </group>
 
     <!-- Robot description -->
     <let name="robot_description_content" value="$(command '$(find-exec xacro) $(find-pkg-share $(var description_package))/urdf/$(var description_file).urdf.xacro name:=$(var name) prefix:=$(var prefix) bus_config:=$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/$(var bus_config_file) master_config:=$(find-pkg-share $(var bus_config_package))/$(var bus_config_directory)/$(var master_config_file) can_interface_name:=$(var can_interface_name)')" />

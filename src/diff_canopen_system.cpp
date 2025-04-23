@@ -88,9 +88,42 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn DiffCa
   return init_rval;
 }
 
+hardware_interface::CallbackReturn DiffCanopenSystem::on_configure(const rclcpp_lifecycle::State & previous_state)
+{
+  auto ret_val = CanopenSystem::on_configure(previous_state);
+  if (ret_val != hardware_interface::CallbackReturn::SUCCESS)
+  {
+    return ret_val;
+  }
+
+  auto drivers = device_container_->get_registered_drivers();
+
+  for (size_t i = 0; i < info_.joints.size(); i++)
+  {
+    // TODO(dr.denis): Can we here avoid parsing of the node_id?
+    const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
+    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
+
+    // reset node nmt
+    if (!(proxy_driver->reset_node_nmt_command() && proxy_driver->start_node_nmt_command()))
+    {
+      RCLCPP_ERROR(kLogger, "Failed to reset or start node nmt for node id: 0x%X", node_id);
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+  }
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
 std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
+
+  // add CANOpen interfaces
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+      info_.hardware_parameters["enable_canopen_interfaces"] == "true")
+  {
+    state_interfaces = CanopenSystem::export_state_interfaces();
+  }
 
   for (size_t i = 0; i < info_.joints.size(); i++)
   {
@@ -183,9 +216,6 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, "battery_voltage",
       &state_ro_[voltage_node_pdos])); 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, "nmt/state",
-       &canopen_data_[node_id].nmt_state.state));
   }
   return state_interfaces;
 }
@@ -194,8 +224,22 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
+  // add CANOpen interfaces
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+      info_.hardware_parameters["enable_canopen_interfaces"] == "true")
+  {
+    command_interfaces = CanopenSystem::export_command_interfaces();
+  }
+
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
+    if (info_.joints[i].parameters.find("node_id") == info_.joints[i].parameters.end())
+    {
+      // skip adding canopen interfaces
+      continue;
+    }
+
+    // TODO(dr.denis): Can we here avoid parsing of the node_id?
     const uint8_t node_id = static_cast<uint8_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
     RCLCPP_INFO(kLogger, "Command Mapping for NodeID: 0x%X are:", node_id);
     // Mapping - TODO(): Check interface type
@@ -215,30 +259,26 @@ std::vector<hardware_interface::CommandInterface> DiffCanopenSystem::export_comm
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
       &velocity_command_[velocity_ref_node_indices]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, "nmt/reset", &canopen_data_[node_id].nmt_state.reset_ons));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, "nmt/reset_fbk", &canopen_data_[node_id].nmt_state.reset_fbk));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, "nmt/start", &canopen_data_[node_id].nmt_state.start_ons));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, "nmt/start_fbk", &canopen_data_[node_id].nmt_state.start_fbk));
   }
+
   return command_interfaces;
 }
 
 
 hardware_interface::return_type DiffCanopenSystem::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  auto ret_val = CanopenSystem::read(time, period);
-  // if not OK then return with error
-  if (ret_val != hardware_interface::return_type::OK)
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+      info_.hardware_parameters["enable_canopen_interfaces"] == "true")
   {
-    RCLCPP_ERROR(kLogger, "Error has hapend in underlaying CanopenSystem::read call. See above for more details.");
-    return ret_val;
+    auto ret_val = CanopenSystem::read(time, period);
+    // if not OK then return with error
+    if (ret_val != hardware_interface::return_type::OK)
+    {
+      RCLCPP_ERROR(kLogger, "Error has hapend in underlaying CanopenSystem::read call. See above for more details.");
+      return ret_val;
+    }
   }
+  
 
   // Find a mapping between RPDOs and the state variables..
   // This for loop read the current value from the different joints.
@@ -264,8 +304,18 @@ hardware_interface::return_type DiffCanopenSystem::read(const rclcpp::Time & tim
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+      info_.hardware_parameters["enable_canopen_interfaces"] == "true")
+  {
+    auto ret_val = CanopenSystem::write(time, period);
+    if (ret_val != hardware_interface::return_type::OK)
+    {
+      return ret_val;
+    }
+  }
+
   auto drivers = device_container_->get_registered_drivers();
 
   for (size_t i = 0; i < info_.joints.size(); i++)
@@ -274,59 +324,41 @@ hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & /*
     const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
-    // reset node nmt
-    if (canopen_data_[node_id].nmt_state.reset_command())
-    {
-      canopen_data_[node_id].nmt_state.reset_fbk = static_cast<double>(proxy_driver->reset_node_nmt_command());
-      enable_write_ = true;
-    }
+    // Convert percents command to speed data
+    // Command interface (rad/s) -> RPM -> Percentage -> CAN - Data
 
-    // start nmt
-    if (canopen_data_[node_id].nmt_state.start_command())
-    {
-      canopen_data_[node_id].nmt_state.start_fbk = static_cast<double>(proxy_driver->start_node_nmt_command());
-      enable_write_ = true;
-    }
+    // TODO(dr.denis): Can we here avoid parsing of the node_id?
+    uint16_t velocity_ref_index = static_cast<uint16_t>(
+      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX], nullptr, 0));
+    uint8_t velocity_ref_subindex = static_cast<uint8_t>(
+      std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX], nullptr, 0));
 
-    // tpdo data one shot mechanism
-    if (enable_write_)
-    {
-      // Convert percents command to speed data
-      // Command interface (rad/s) -> RPM -> Percentage -> CAN - Data
+    // Make pair
+    PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
+    NODE_PDO_INDICES velocity_ref_node_indices(node_id, velocity_ref_indices);
+ 
+    // Get rads from command interaface and then convert to RPM
+    auto rpm = static_cast<int>(std::round(convert_rads_to_rpm(velocity_command_[velocity_ref_node_indices])));
 
-      // TODO(dr.denis): Can we here avoid parsing of the node_id?
-      uint16_t velocity_ref_index = static_cast<uint16_t>(
-        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_INDEX], nullptr, 0));
-      uint8_t velocity_ref_subindex = static_cast<uint8_t>(
-        std::stoi(info_.joints[i].parameters[COMMAND_TARGET_SPEED_TAG_SUBINDEX], nullptr, 0));
+    // TODO(): We need to check the range of the rpm value
 
-      // Make pair
-      PDO_INDICES velocity_ref_indices(velocity_ref_index, velocity_ref_subindex);
-      NODE_PDO_INDICES velocity_ref_node_indices(node_id, velocity_ref_indices);
+    // TODO(): We need PRM -> Percentage
+    double percentage = convert_rpm_to_percentage(rpm);
 
-      // Get rads from command interaface and then convert to RPM
-      auto rpm = static_cast<int>(std::round(convert_rads_to_rpm(velocity_command_[velocity_ref_node_indices])));
-
-      // TODO(): We need to check the range of the rpm value
-
-      // TODO(): We need PRM -> Percentage
-      double percentage = convert_rpm_to_percentage(rpm);
-
-      // Prepare the data
-      canopen_data_[node_id].tpdo_data.index = velocity_ref_index;
-      canopen_data_[node_id].tpdo_data.subindex = velocity_ref_subindex;
-      canopen_data_[node_id].tpdo_data.data = convert_percentage_to_speed_value(rpm);
-      canopen_data_[node_id].tpdo_data.prepare_data();
-      proxy_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
-      // Debug Message
-      // RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
-      // RCLCPP_INFO(kLogger, "Iterator: 0x%X; Index: 0x%X; Subindex: 0x%X; Data: %u",
-      //   node_id,
-      //   canopen_data_[node_id].tpdo_data.original_data.index_,
-      //   canopen_data_[node_id].tpdo_data.original_data.subindex_,
-      //   canopen_data_[node_id].tpdo_data.original_data.data_);
-      // RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
-    }
+    // Prepare the data
+    canopen_data_[node_id].tpdo_data.index = velocity_ref_index;
+    canopen_data_[node_id].tpdo_data.subindex = velocity_ref_subindex;
+    canopen_data_[node_id].tpdo_data.data = convert_percentage_to_speed_value(rpm);
+    canopen_data_[node_id].tpdo_data.prepare_data();
+    proxy_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
+    // Debug Message
+    // RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
+    // RCLCPP_INFO(kLogger, "Iterator: 0x%X; Index: 0x%X; Subindex: 0x%X; Data: %u",
+    //   node_id,
+    //   canopen_data_[node_id].tpdo_data.original_data.index_,
+    //   canopen_data_[node_id].tpdo_data.original_data.subindex_,
+    //   canopen_data_[node_id].tpdo_data.original_data.data_);
+    // RCLCPP_INFO(kLogger, "--- END of the debug message in HW-write()");
   }
 
   return hardware_interface::return_type::OK;

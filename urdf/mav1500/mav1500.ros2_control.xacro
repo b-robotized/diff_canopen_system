@@ -16,6 +16,7 @@
       <param name="master_config">${master_config}</param>
       <param name="can_interface_name">${can_interface_name}</param>
       <param name="master_bin">"${master_bin}"</param>
+      <param name="enable_canopen_interfaces">true</param>
     </hardware>
     <joint name="${prefix}left_wheel">
       <param name="node_id">0x1E</param>  <!--30-->
@@ -56,7 +57,7 @@
 
     <joint name="${prefix}right_wheel">
       <param name="node_id">0x1F</param>  <!--31-->
-<param name="command_interface__target_speed__index">0x2110</param> 
+      <param name="command_interface__target_speed__index">0x2110</param> 
       <param name="command_interface__target_speed__subindex">0x0</param> 
       <command_interface name="velocity"/>  <!-- -8000 to 8000 rpm -->
 

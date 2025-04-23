@@ -62,6 +62,15 @@ struct WheelState {
   double velocity_command;
 };
 
+struct CONTROL_WORD
+{
+  uint16_t drive_enable = 0x0001;
+  uint16_t contractor_enable = 0x0002;
+  uint16_t break_release = 0x0004;
+  uint16_t control_mode = 0x0080;
+  uint16_t reset_fault = 0x0080;
+};
+
 class DiffCanopenSystem : public canopen_ros2_control::CanopenSystem
 {
 public:
@@ -70,9 +79,15 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
 
+  hardware_interface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State & previous_state) override;
+
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+
+  // hardware_interface::CallbackReturn on_activate(
+  //   const rclcpp_lifecycle::State & previous_state) override;
 
   hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 

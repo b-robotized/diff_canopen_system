@@ -7,6 +7,10 @@ master:
   package: "canopen_master_driver"
   baudrate: 250
   reset_communication: false
+  # sync_period: 10000
+
+  # Custom added from debugging
+  # product_code: 0x01C9C44A
 
 defaults:
   dcf: "EDS_20014_Standard_CANopen_V212_01.eds"
@@ -18,7 +22,6 @@ defaults:
     enable: true
     period: 1000 # in milliseconds
 
-  # scale_vel_to_dev: 327.67  # VLC throttle= -32768 - +32767:  -100% -+100% -> 1%=327,67~ 328=' 0x 148'
   reset_communication: false
 
 
