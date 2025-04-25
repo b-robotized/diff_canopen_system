@@ -102,10 +102,10 @@ hardware_interface::CallbackReturn DiffCanopenSystem::on_configure(const rclcpp_
   {
     // TODO(dr.denis): Can we here avoid parsing of the node_id?
     const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
-    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
+    auto motor_controller_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
     // reset node nmt
-    if (!(proxy_driver->reset_node_nmt_command() && proxy_driver->start_node_nmt_command()))
+    if (!(motor_controller_driver->reset_node_nmt_command() && motor_controller_driver->start_node_nmt_command()))
     {
       RCLCPP_ERROR(kLogger, "Failed to reset or start node nmt for node id: 0x%X", node_id);
       return hardware_interface::CallbackReturn::ERROR;
@@ -171,6 +171,7 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     PDO_INDICES inverter_temperature_indices(inverter_temperature_index, inverter_temperature_subindex);
     PDO_INDICES tempeature_pdo_indices(temperature_index, temperature_subindex);
     PDO_INDICES voltage_pdo_indices(voltage_index, voltage_subindex);
+    PDO_INDICES fault_pdo_indices(0x2115, 0x00);
 
     // Save the PDO indices
     state_pdo_indices_.emplace_back(torque_pdo_indices);
@@ -178,13 +179,15 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_pdo_indices_.emplace_back(inverter_temperature_indices);
     state_pdo_indices_.emplace_back(tempeature_pdo_indices);
     state_pdo_indices_.emplace_back(voltage_pdo_indices);
+    state_pdo_indices_.emplace_back(fault_pdo_indices);
 
     // Make pair
-    NODE_PDO_INDICES torque_node_pdos  (static_cast<int>(node_id), torque_pdo_indices);
+    NODE_PDO_INDICES torque_node_pdos    (static_cast<int>(node_id), torque_pdo_indices);
     NODE_PDO_INDICES velocity_node_pdos  (static_cast<int>(node_id), velocity_pdo_indices);
     NODE_PDO_INDICES rpm_node_pdos       (static_cast<int>(node_id), inverter_temperature_indices);
     NODE_PDO_INDICES tempeature_node_pdos(static_cast<int>(node_id), tempeature_pdo_indices);
     NODE_PDO_INDICES voltage_node_pdos   (static_cast<int>(node_id), voltage_pdo_indices);
+    NODE_PDO_INDICES fault_node_pdos     (static_cast<int>(node_id), fault_pdo_indices);
 
     // Intialize the value
     state_ro_.emplace(torque_node_pdos  , 0.0);
@@ -192,13 +195,15 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_ro_.emplace(rpm_node_pdos       , 0.0);
     state_ro_.emplace(tempeature_node_pdos, 0.0);
     state_ro_.emplace(voltage_node_pdos   , 0.0);
+    state_ro_.emplace(fault_node_pdos   , 0.0);
 
     // State converter
-    state_converter_.emplace(torque_node_pdos  , &DiffCanopenSystem::convert_to_position      );
+    state_converter_.emplace(torque_node_pdos    , &DiffCanopenSystem::convert_to_position      );
     state_converter_.emplace(velocity_node_pdos  , &DiffCanopenSystem::convert_to_veloctiy      );
     state_converter_.emplace(rpm_node_pdos       , &DiffCanopenSystem::convert_to_RPM           );
     state_converter_.emplace(tempeature_node_pdos, &DiffCanopenSystem::convert_to_temperature   );
     state_converter_.emplace(voltage_node_pdos   , &DiffCanopenSystem::convert_to_switch_voltage);
+    state_converter_.emplace(fault_node_pdos     , &DiffCanopenSystem::convert_to_switch_voltage);
 
     // state
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -216,6 +221,9 @@ std::vector<hardware_interface::StateInterface> DiffCanopenSystem::export_state_
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, "battery_voltage",
       &state_ro_[voltage_node_pdos])); 
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      info_.joints[i].name, "fault",
+      &state_ro_[fault_node_pdos])); 
   }
   return state_interfaces;
 }
@@ -322,7 +330,7 @@ hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & ti
   {
     // TODO(dr.denis): Can we here avoid parsing of the node_id?
     const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
-    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
+    auto motor_controller_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
 
     // Convert percents command to speed data
     // Command interface (rad/s) -> RPM -> Percentage -> CAN - Data
@@ -350,7 +358,18 @@ hardware_interface::return_type DiffCanopenSystem::write(const rclcpp::Time & ti
     canopen_data_[node_id].tpdo_data.subindex = velocity_ref_subindex;
     canopen_data_[node_id].tpdo_data.data = convert_percentage_to_speed_value(rpm);
     canopen_data_[node_id].tpdo_data.prepare_data();
-    proxy_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
+    motor_controller_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
+    
+    uint16_t drive_enable_index = static_cast<uint16_t>(std::stoi("0x2100", nullptr, 0));
+    uint8_t  drive_enable_subindex = static_cast<uint8_t>(std::stoi("0x00", nullptr, 0));
+    
+    // Prepare the data
+    canopen_data_[node_id].tpdo_data.index = drive_enable_index;
+    canopen_data_[node_id].tpdo_data.subindex = drive_enable_subindex;
+    canopen_data_[node_id].tpdo_data.data = true;
+    canopen_data_[node_id].tpdo_data.prepare_data();
+    
+    motor_controller_driver->tpdo_transmit(canopen_data_[node_id].tpdo_data.original_data);
     // Debug Message
     // RCLCPP_INFO(kLogger, "This is a debug message in HW-write().....");
     // RCLCPP_INFO(kLogger, "Iterator: 0x%X; Index: 0x%X; Subindex: 0x%X; Data: %u",

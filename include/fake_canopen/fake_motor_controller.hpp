@@ -54,12 +54,18 @@ protected:
    * @param subidx The subindex of the PDO.
    */
  void OnWrite(uint16_t idx, uint8_t subidx) noexcept override
-  { if (idx == 0x3366 && subidx == 0)
+  { if (idx == 0x2100 && subidx == 0x00)
     {
-    uint16_t val =(*this)[idx][subidx];
-    (*this)[0x3366][0] = val;
-    // RCLCPP_INFO(rclcpp::get_logger("fake_inverter"),"the variable was incremented %u.", val);
-    this->TpdoEvent(0);
+      bool val =(*this)[idx][subidx];
+      (*this)[0x2114][0x00] = val;
+      // RCLCPP_INFO(rclcpp::get_logger("fake_inverter"),"the variable was incremented %u.", val);
+      this->TpdoEvent(0);
+    }
+    else
+    {
+      (*this)[0x2115][0x00] = true;
+      // RCLCPP_INFO(rclcpp::get_logger("fake_inverter"),"the variable was incremented %u.", val);
+      this->TpdoEvent(0);
     }
 
     // Publish periodic message
@@ -78,9 +84,9 @@ protected:
     // If ros is running, send messages
     while (rclcpp::ok())
     {
-      uint32_t val = 0x1122;
-      (*this)[0x4004][0] = val;
-      this->TpdoEvent(0);
+      // uint32_t val = 0x1122;
+      // (*this)[0x4004][0] = val;
+      // this->TpdoEvent(0);
       // 100 ms sleep - 10 Hz
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
