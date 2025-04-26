@@ -1,0 +1,30 @@
+# Can be used instead of the paths below
+options:
+  dcf_path: "@BUS_CONFIG_PATH@"
+master:
+  node_id: 1
+  driver: "ros2_canopen::MasterDriver"
+  package: "canopen_master_driver"
+  baudrate: 250
+  reset_communication: false
+  sync_period: 1000 # in milliseconds
+
+defaults:
+  dcf: "fake_motor_controller.eds"
+  driver: "ros2_canopen::ProxyDriver"
+  package: "canopen_proxy_driver"
+  polling: true
+  period: 10
+  diagnostics:
+    enable: true
+    period: 1000 # in milliseconds
+
+  # scale_vel_to_dev: 327.67  # VLC throttle= -32768 - +32767:  -100% -+100% -> 1%=327,67~ 328=' 0x 148'
+  reset_communication: false
+
+
+nodes:
+  left_wheel:
+    node_id: 0x23
+  right_wheel:
+    node_id: 0x28

@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:macro name="mav1500_ros2_control" params="
+              name
+              prefix
+              bus_config
+              master_config
+              can_interface_name
+              master_bin">
+
+  <ros2_control name="${name}" type="system">
+    <hardware>
+      <plugin>canopen_ros2_control/CanopenSystem</plugin>
+      <param name="bus_config">${bus_config}</param>
+      <param name="master_config">${master_config}</param>
+      <param name="can_interface_name">${can_interface_name}</param>
+      <param name="master_bin">"${master_bin}"</param>
+      <param name="enable_canopen_interfaces">true</param>
+    </hardware>
+    <joint name="${prefix}left_wheel">
+      <param name="node_id">0x1E</param>  <!--30-->
+
+      <!-- convert this to -->
+      <!-- <command_interface name="velocity">
+        <param name="index">0x2110</param>
+        <param name="subindex">0x0</param>
+        <param min="-8000" />
+        <param max="8000" />
+        <param unit="rpm" />
+        <param hw_data_type="int16_t" />
+      </command_interface> -->
+    </joint>
+
+    <joint name="${prefix}right_wheel">
+      <param name="node_id">0x1F</param>  <!--31-->
+    </joint>
+  </ros2_control>
+
+</xacro:macro>
+
+</robot>

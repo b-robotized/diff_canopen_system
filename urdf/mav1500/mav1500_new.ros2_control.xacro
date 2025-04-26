@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:macro name="mav1500_ros2_control" params="
+              name
+              prefix
+              bus_config
+              master_config
+              can_interface_name
+              master_bin">
+
+  <ros2_control name="${name}" type="system">
+    <hardware>
+      <plugin>custom_mapping_canopen_system/CustomMappingCanopenSystem</plugin>
+      <param name="bus_config">${bus_config}</param>
+      <param name="master_config">${master_config}</param>
+      <param name="can_interface_name">${can_interface_name}</param>
+      <param name="master_bin">"${master_bin}"</param>
+      <param name="enable_canopen_interfaces">true</param>
+    </hardware>
+    <joint name="${prefix}left_wheel">
+      <param name="node_id">0x1E</param>  <!--30-->
+
+      <command_interface name="velocity">
+        <param min="-8000" />
+        <param max="8000" />
+        <param data_type="int16_t" />
+        <!-- CANOpen parameters -->
+        <param name="index">0x2110</param>
+        <param name="subindex">0x0</param>
+        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
+      </command_interface>
+
+      <state_interface name="velocity">
+        <param min="-10000" />
+        <param max="10000" />
+        <param data_type="int16_t" />
+        <!-- CANOpen parameters -->
+        <param name="index">0x211D</param>
+        <param name="subindex">0x0</param>
+        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
+      </state_interface>
+    </joint>
+
+    <joint name="${prefix}right_wheel">
+      <command_interface name="velocity">
+        <param min="-8000" />
+        <param max="8000" />
+        <param data_type="int16_t" />
+        <!-- CANOpen parameters -->
+        <param name="index">0x2110</param>
+        <param name="subindex">0x0</param>
+        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
+      </command_interface>
+
+      <state_interface name="velocity">
+        <param min="-10000" />
+        <param max="10000" />
+        <param data_type="int16_t" />
+        <!-- CANOpen parameters -->
+        <param name="index">0x211D</param>
+        <param name="subindex">0x0</param>
+        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
+      </state_interface>
+    </joint>
+  </ros2_control>
+
+</xacro:macro>
+
+</robot>
