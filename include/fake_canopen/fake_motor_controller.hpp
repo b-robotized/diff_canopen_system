@@ -64,6 +64,8 @@ protected:
     else
     {
       (*this)[0x2115][0x00] = true;
+      (*this)[0x2116][0x00] = true;
+      (*this)[0x211D][0x00] = static_cast<int16_t>(254);
       // RCLCPP_INFO(rclcpp::get_logger("fake_inverter"),"the variable was incremented %u.", val);
       this->TpdoEvent(0);
     }

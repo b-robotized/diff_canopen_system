@@ -26,6 +26,7 @@ endforeach()
 add_library(diff_canopen_system SHARED
   src/diff_canopen_system.cpp
   src/diff_canopen_system_multi_rpdo.cpp
+  src/custom_mapping_canopen_system.cpp
 )
 target_compile_features(diff_canopen_system PUBLIC c_std_99 cxx_std_17)
 target_include_directories(diff_canopen_system PUBLIC

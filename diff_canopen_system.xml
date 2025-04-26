@@ -13,5 +13,12 @@
       ros2_control hardware interface for custom Diff-Drive CanOpen System with multiple RPDOs.
     </description>
   </class>
+  <class name="custom_mapping_canopen_system/CustomMappingCanopenSystem"
+         type="custom_mapping_canopen_system::CustomMappingCanopenSystem"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control hardware interface for custom Diff-Drive CanOpen System with multiple RPDOs.
+    </description>
+  </class>
 </library>
 

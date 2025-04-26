@@ -295,6 +295,9 @@ hardware_interface::return_type DiffCanopenSystem::read(const rclcpp::Time & tim
     // TODO(dr.denis): Can we here avoid parsing of the node_id?
     const uint16_t node_id = static_cast<uint16_t>(std::stoi(info_.joints[i].parameters["node_id"], nullptr, 0));
 
+    double stuff = canopen_data_[node_id].get_rpdo_data(0x211D, 0x00);
+    RCLCPP_INFO(kLogger, "NodeID: 0x%X; Stuff: %f", node_id, stuff);
+
     for (auto pdo_index : state_pdo_indices_)
     {
       // Get the data from the map
