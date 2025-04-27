@@ -12,7 +12,7 @@
 
 
     <!-- ros2 control include -->
-    <xacro:include filename="$(find diff_canopen_system)/urdf/mav1500/mav1500_raw_canopen.ros2_control.xacro"/>
+    <xacro:include filename="$(find diff_canopen_system)/urdf/mav1500/mav1500_new.ros2_control.xacro"/>
 
     <xacro:mav1500_ros2_control
       name="$(arg name)"

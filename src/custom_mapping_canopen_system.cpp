@@ -27,7 +27,7 @@ namespace custom_mapping_canopen_system
 {
 CustomMappingCanopenSystem::CustomMappingCanopenSystem() : CanopenSystem() {};
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn CustomMappingCanopenSystem::on_init(
+hardware_interface::CallbackReturn CustomMappingCanopenSystem::on_init(
   const hardware_interface::HardwareInfo & info)
 {
   auto ret_val = CanopenSystem::on_init(info);
@@ -113,12 +113,14 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Custom
             return CallbackReturn::ERROR;
           }
         }
-
-        commands_[joint.name].push_back(itf_to_canopen);
       }
+      commands_[joint.name].push_back(itf_to_canopen);
     }
+
+
     for (const auto & interface : joint.state_interfaces)
     {
+
       if (!check_parameter_exist(interface.parameters, "index", interface.name, joint.name) ||
           !check_parameter_exist(interface.parameters, "subindex", interface.name, joint.name))
       {
@@ -127,7 +129,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Custom
       auto itf_to_canopen = InterfaceToCanOpen();
       itf_to_canopen.info = interface;
       itf_to_canopen.node_id = node_id;
-      itf_to_canopen.data = std::make_shared<canopen_ros2_control::RORos2ControlCoData>();
+      itf_to_canopen.data = std::make_shared<canopen_ros2_control::RORos2ControlCOData>();
       try {
         itf_to_canopen.data->original_data = 
           ros2_canopen::COData{
@@ -167,12 +169,27 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Custom
             return CallbackReturn::ERROR;
           }
         }
-
-        states_[joint.name].push_back(itf_to_canopen);
       }
+      states_[joint.name].push_back(itf_to_canopen);
     }
   }
 
+  // TODO: remove, this is debug to see itnerfaces to canopen in case 
+  RCLCPP_INFO(kLogger, "COMMAND InterfaceToCanopen");
+  for (const auto& pair : commands_) {
+      RCLCPP_INFO(kLogger, "\t%s", pair.first.c_str());
+      for (auto& interface : pair.second) {
+          RCLCPP_INFO(kLogger, "\t\t%s", interface.info.name.c_str());
+      }
+  }
+
+  RCLCPP_INFO(kLogger, "STATE InterfaceToCanopen");
+  for (const auto& pair : states_) {
+      RCLCPP_INFO(kLogger, "\t%s", pair.first.c_str());
+      for (auto& interface : pair.second) {
+          RCLCPP_INFO(kLogger, "\t\t%s", interface.info.name.c_str());
+      }
+  }
   return ret_val;
 }
 
@@ -243,17 +260,28 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
 
   for (const auto & joint : info_.joints)
   {
+    // TODO(Dr. Denis): Can we here avoid parsing of the node_id?
+    node_id_t node_id = 0;
+    if ( !states_[joint.name].empty())
+    {
+      // TODO(Dr. Denis): Can we here avoid parsing of the node_id?
+      node_id = commands_[joint.name][0].node_id;
+    }
+
     for (const auto & interface : states_[joint.name])
     {
+      //TODO: "ReadOnly ROs2ControlCoData" has set_data() function? how if it is read only?
+      // then, we are manually accessing original data "private" structure members, this is not clean
       interface.data->data = canopen_data_[node_id].get_rpdo_data(
-        interface.data->original_data.index, interface.data->original_data.subindex);
+        interface.data->original_data.index_, 
+        interface.data->original_data.subindex_);
     //TODO: apply scale factor: CAN --> ros2_control
     }
   }
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
       info_.hardware_parameters["enable_canopen_interfaces"] == "true")
@@ -272,15 +300,12 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
   for (const auto & joint : info_.joints)
   {
     node_id_t node_id = 0;
-    if (commands_[joint.name].empty())
-    {
-      continue;
-    }
-    else
+    if ( !commands_[joint.name].empty())
     {
       // TODO(Dr. Denis): Can we here avoid parsing of the node_id?
       node_id = commands_[joint.name][0].node_id;
     }
+
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
     for (const auto & interface : commands_[joint.name])
     {
@@ -290,6 +315,14 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
       // interface.data->data = scale(interface.data->data, interface.scale_factor);
       data_to_transmit->prepare_data();
       proxy_driver->tpdo_transmit(data_to_transmit->original_data);
+
+      /* DEBUG 
+      RCLCPP_ERROR(kLogger, "Writing: NodeID: 0x%X  |  index: 0x%X  |  subindex: 0x%X  |  data: 0x%X",
+        node_id,
+        data_to_transmit->original_data.index_,
+        data_to_transmit->original_data.subindex_,
+        data_to_transmit->original_data.data_);
+      */
     }
   }
   return hardware_interface::return_type::OK;
@@ -297,8 +330,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
 
 uint32_t CustomMappingCanopenSystem::scale(const double data, const double scale_factor)
 {
-  double scaled_data = data * scale_factor;
-  return scaled_value;
+  return static_cast<uint32_t>(data * scale_factor);
 }
 
 double CustomMappingCanopenSystem::convert_rpm_to_rads(const uint32_t rpm)

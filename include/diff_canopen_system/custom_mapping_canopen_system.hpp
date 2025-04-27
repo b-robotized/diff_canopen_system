@@ -84,7 +84,7 @@ class CustomMappingCanopenSystem : public canopen_ros2_control::CanopenSystem
 public:
   CustomMappingCanopenSystem();
   ~CustomMappingCanopenSystem() = default;
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
+  hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
@@ -139,7 +139,7 @@ private:
   std::unordered_map<std::string, std::vector<InterfaceToCanOpen>> states_;
   std::unordered_map<std::string, std::vector<InterfaceToCanOpen>> commands_;
 
-  double scale(const double data, const double scale_factor);
+  uint32_t scale(const double data, const double scale_factor);
 
   static double convert_to_position(double rpdo_data);
   static double convert_to_temperature(double rpdo_data);
