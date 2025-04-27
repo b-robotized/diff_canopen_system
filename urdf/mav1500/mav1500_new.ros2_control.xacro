@@ -22,9 +22,9 @@
       <param name="node_id">0x1E</param>  <!--30-->
 
       <command_interface name="velocity">
-        <param min="-8000" />
-        <param max="8000" />
-        <param data_type="int16_t" />
+        <param name="min">-8000</param>
+        <param name="max">8000</param>
+        <param name="data_type">int16_t</param>
         <!-- CANOpen parameters -->
         <param name="index">0x2110</param>
         <param name="subindex">0x0</param>
@@ -32,9 +32,9 @@
       </command_interface>
 
       <state_interface name="velocity">
-        <param min="-10000" />
-        <param max="10000" />
-        <param data_type="int16_t" />
+        <param name="min">-10000</param>
+        <param name="max">10000</param>
+        <param name="data_type">int16_t</param>
         <!-- CANOpen parameters -->
         <param name="index">0x211D</param>
         <param name="subindex">0x0</param>
@@ -43,10 +43,12 @@
     </joint>
 
     <joint name="${prefix}right_wheel">
+      <param name="node_id">0x1F</param>  <!--31-->
+
       <command_interface name="velocity">
-        <param min="-8000" />
-        <param max="8000" />
-        <param data_type="int16_t" />
+        <param name="min">-8000</param>
+        <param name="max">8000</param>
+        <param name="data_type">int16_t</param>
         <!-- CANOpen parameters -->
         <param name="index">0x2110</param>
         <param name="subindex">0x0</param>
@@ -54,9 +56,9 @@
       </command_interface>
 
       <state_interface name="velocity">
-        <param min="-10000" />
-        <param max="10000" />
-        <param data_type="int16_t" />
+        <param name="min">-10000</param>
+        <param name="max">10000</param>
+        <param name="data_type">int16_t</param>
         <!-- CANOpen parameters -->
         <param name="index">0x211D</param>
         <param name="subindex">0x0</param>

@@ -139,7 +139,7 @@ private:
   std::unordered_map<std::string, std::vector<InterfaceToCanOpen>> states_;
   std::unordered_map<std::string, std::vector<InterfaceToCanOpen>> commands_;
 
-  static double scale(double data, double scale_factor);
+  double scale(const double data, const double scale_factor);
 
   static double convert_to_position(double rpdo_data);
   static double convert_to_temperature(double rpdo_data);
