@@ -29,14 +29,6 @@
 namespace custom_mapping_canopen_system
 {
 
-template<typename Target, typename Source>
-Target caster(Source src)
-{
-    return static_cast<Target>(src);
-}
-
-std::function<int16_t(double)> int16_t_caster = caster<int16_t, double>;
-
 using node_id_t = uint8_t;
 
 struct InterfaceToCanOpen
@@ -47,38 +39,26 @@ struct InterfaceToCanOpen
   double scale_factor = 1.0;
 };
 
-enum CommandInterfaces
+struct ControllerStatusByte
 {
-  VELOCITY_REFERENCE,
-  NMT_RESET,
-  NMT_RESET_FBK,
-  NMT_START,
-  NMT_START_FBK,
+  bool fault;
+  bool power_stage_active;
+  bool torque_mode;
+  bool main_contactor_status;
+  bool can_enable;
+  bool safe_stop_active;
 };
 
-enum StateInterfaces
-{
-  VELOCITY_REF,
-  VELOCITY_FEEDBACK,
-  MOTOR_TEMPERATURE,
-  MOTOR_POWER,
-  BATTERY_STATE,
-  ERROR_STATUS,
-  NMT_STATE,
+enum ControllerStates {
+  DISABLED = 0,
+  ENABLED,
+  DISABLED_CONTACTOR,
+  ENABLED_CONTACTOR,
+  ENABLED_CONTACTOR_BREAK_RELEASE,
+  FAULT,
+  SAFE_STOP,
 };
 
-struct WheelState {
-  // Read only
-  double velocity_reference;
-  double velocity_feedback;
-  double motor_temperature;
-  double motor_power;
-  double motor_battery_state;
-  double error_status; 
-
-  // Write only
-  double velocity_command;
-};
 class CustomMappingCanopenSystem : public canopen_ros2_control::CanopenSystem
 {
 public:
@@ -95,66 +75,19 @@ public:
 
   hardware_interface::return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-protected:
-  // void initDeviceContainer() override;
-
 private:
-  // States - This is a container to store states in a double form
-  std::unordered_map<uint, WheelState> wheel_states_;
-
-  // This make the std::pair hashable
-  struct pair_hash {
-    template <class T1, class T2>
-    std::size_t operator () (const std::pair<T1, T2>& pair) const {
-        std::size_t h1 = std::hash<T1>{}(pair.first);
-        std::size_t h2 = 0;
-
-        // check if T2 is a pair, if so recursively compute hash
-        if constexpr (std::is_same<T2, std::pair<uint16_t, uint8_t>>::value) {
-            h2 = pair_hash{}(pair.second);
-        } else {
-            h2 = std::hash<T2>{}(pair.second);
-        }
-
-        return h1 ^ h2;
-    }
-  };
-
-  // PDO_Interfaces_Mapping
-  using PDO_INDICES = std::pair<uint16_t, uint8_t>; // Index, Subindex
-  using NODE_PDO_INDICES = std::pair<uint, PDO_INDICES>; // Node_id, PDO_INDICES
-
-  // States - Read only
-  std::unordered_map<NODE_PDO_INDICES, double, pair_hash> state_ro_;
-
-  // Command
-  std::unordered_map<NODE_PDO_INDICES, double, pair_hash> velocity_command_; 
-
-  // State converter
-  typedef double (*FunctionType)(double);
-  std::unordered_map<NODE_PDO_INDICES, FunctionType, pair_hash> state_converter_;
-
   // TODO(Dr.Denis): We might here need to update this the API changed compatibility
   // For now we develop against deprecated API!!
-  std::unordered_map<std::string, std::vector<InterfaceToCanOpen>> states_;
-  std::unordered_map<std::string, std::vector<InterfaceToCanOpen>> commands_;
+  std::unordered_map<std::string, std::unordered_map<std::string, InterfaceToCanOpen>> states_;
+  std::unordered_map<std::string, std::unordered_map<std::string, InterfaceToCanOpen>> commands_;
 
   uint32_t scale(const double data, const double scale_factor);
 
-  static double convert_to_position(double rpdo_data);
-  static double convert_to_temperature(double rpdo_data);
-  static double convert_to_veloctiy(double rpdo_data);
-  static double convert_to_RPM(double rpdo_data);
-  static double convert_to_switch_voltage(double rpdo_data);
+  // BEGIN: Controller specific
+  std::unordered_map<std::string, bool> last_toggled_bit_;
 
-  double convert_rpm_to_rads(const uint32_t rpm);
-  double convert_rads_to_rpm(const double rads);
-  double convert_rpm_to_percentage(const double rpm);
-  uint32_t convert_percentage_to_speed_value(const double percentage);
-
-  std::vector<PDO_INDICES> state_pdo_indices_;
-
-  bool enable_write_ = false;
+  std::unordered_map<std::string, ControllerStates> controller_state_;
+  // END: Controller specific
 };
 
 }  // namespace custom_mapping_canopen_system

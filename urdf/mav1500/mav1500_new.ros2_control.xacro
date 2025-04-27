@@ -20,52 +20,185 @@
     </hardware>
     <joint name="${prefix}left_wheel">
       <param name="node_id">0x1E</param>  <!--30-->
-
-      <command_interface name="velocity">
-        <param name="min">-8000</param>
-        <param name="max">8000</param>
-        <param name="data_type">int16_t</param>
-        <!-- CANOpen parameters -->
-        <param name="index">0x2110</param>
-        <param name="subindex">0x0</param>
-        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
-      </command_interface>
-
-      <state_interface name="velocity">
-        <param name="min">-10000</param>
-        <param name="max">10000</param>
-        <param name="data_type">int16_t</param>
-        <!-- CANOpen parameters -->
-        <param name="index">0x211D</param>
-        <param name="subindex">0x0</param>
-        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
-      </state_interface>
+      <xacro:dana_tm4_interfaces_mapping />
     </joint>
 
     <joint name="${prefix}right_wheel">
       <param name="node_id">0x1F</param>  <!--31-->
-
-      <command_interface name="velocity">
-        <param name="min">-8000</param>
-        <param name="max">8000</param>
-        <param name="data_type">int16_t</param>
-        <!-- CANOpen parameters -->
-        <param name="index">0x2110</param>
-        <param name="subindex">0x0</param>
-        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
-      </command_interface>
-
-      <state_interface name="velocity">
-        <param name="min">-10000</param>
-        <param name="max">10000</param>
-        <param name="data_type">int16_t</param>
-        <!-- CANOpen parameters -->
-        <param name="index">0x211D</param>
-        <param name="subindex">0x0</param>
-        <param name="unit">rpm</param>   <!-- Unit in the mapping file -->
-      </state_interface>
+      <xacro:dana_tm4_interfaces_mapping />
     </joint>
   </ros2_control>
+
+</xacro:macro>
+
+<xacro:macro name="dana_tm4_interfaces_mapping">
+
+<!-- RPDO 1 -->
+  <!-- Control Word -->
+  <command_interface name="drive_enable">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2100</param>
+    <param name="subindex">0x0</param>
+  </command_interface>
+  <command_interface name="main_contactor">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2101</param>
+    <param name="subindex">0x0</param>
+  </command_interface>
+  <command_interface name="break_release">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2102</param>
+    <param name="subindex">0x0</param>
+  </command_interface>
+  <command_interface name="safe_stop">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2107</param>
+    <param name="subindex">0x0</param>
+  </command_interface>
+  <command_interface name="control_mode">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2108</param>
+    <param name="subindex">0x0</param>
+  </command_interface>
+  <command_interface name="speed_control">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2109</param>
+    <param name="subindex">0x0</param>
+  </command_interface>
+  <command_interface name="reset_fault">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2109</param>
+    <param name="subindex">0x0</param>
+  </command_interface>
+
+  <command_interface name="velocity">
+    <param name="min">-8000</param>
+    <param name="max">8000</param>
+    <param name="data_type">int16_t</param>
+    <!-- CANOpen parameters -->
+    <param name="index">0x2110</param>
+    <param name="subindex">0x0</param>
+    <param name="unit">rpm</param>   <!-- rad/s is calculdate in rpm -->
+    <param name="to_hw_scaling_factor">1.0</param>  <!-- use this if additional scaling is reqired -->
+  </command_interface>
+  <command_interface name="torque">
+    <param name="min">-32767</param>
+    <param name="max">32767</param>
+    <param name="data_type">int16_t</param>
+    <!-- CANOpen parameters -->
+    <param name="index">0x2110</param>
+    <param name="subindex">0x0</param>
+    <param name="unit">Nm</param>   <!-- rad/s is calculdate in rpm -->
+    <param name="to_hw_scaling_factor">100</param>  <!-- use this if additional scaling is reqired -->
+  </command_interface>
+
+
+<!-- TPDO 1 -->
+  <!-- Status byte -->
+  <state_interface name="power_stage_active">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2114</param>
+    <param name="subindex">0x0</param>
+  </state_interface>
+  <state_interface name="fault">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2115</param>
+    <param name="subindex">0x0</param>
+  </state_interface>
+  <state_interface name="torque_mode">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2116</param>
+    <param name="subindex">0x0</param>
+  </state_interface>
+  <state_interface name="main_contactor_status">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2117</param>
+    <param name="subindex">0x0</param>
+  </state_interface>
+  <state_interface name="can_enable">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x2118</param>
+    <param name="subindex">0x0</param>
+  </state_interface>
+  <state_interface name="safe_stop_active">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x211A</param>
+    <param name="subindex">0x0</param>
+  </state_interface>
+  <state_interface name="toogle_bit">
+    <param name="min">0</param>
+    <param name="max">1</param>
+    <param name="data_type">bool</param>
+    <param name="index">0x211B</param>
+    <param name="subindex">0x0</param>
+  </state_interface>
+
+  <!-- Motor load -->
+  <state_interface name="load">
+    <param name="min">-100</param>
+    <param name="max">100</param>
+    <param name="data_type">int8_t</param>
+    <param name="index">0x211C</param>
+    <param name="subindex">0x0</param>
+    <param name="unit">%</param>
+  </state_interface>
+  <!-- Actual speed -->
+  <state_interface name="velocity">
+    <param name="min">-10000</param>
+    <param name="max">10000</param>
+    <param name="data_type">int16_t</param>
+    <!-- CANOpen parameters -->
+    <param name="index">0x211D</param>
+    <param name="subindex">0x0</param>
+    <param name="unit">rpm</param>   <!-- rpm to rad/s is automatically calculated -->
+    <param name="from_hw_scaling_factor">1.0</param>  <!-- you should enter inverse of the value as for equivalent command interface -->
+  </state_interface>
+  <!-- Actual torque -->
+  <state_interface name="effort">
+    <param name="min">-32767</param>
+    <param name="max">32767</param>
+    <param name="data_type">int16_t</param>
+    <!-- CANOpen parameters -->
+    <param name="index">0x211E</param>
+    <param name="subindex">0x0</param>
+    <param name="unit">Nm</param>   <!-- rpm to rad/s is automatically calculated -->
+    <param name="from_hw_scaling_factor">0.01</param>  <!-- you should enter inverse of the value as for equivalent command interface -->
+  </state_interface>
+  <state_interface name="encoder_pulse_counter">
+    <param name="min">-32768</param>
+    <param name="max">32767</param>
+    <param name="data_type">int16_t</param>
+    <!-- CANOpen parameters -->
+    <param name="index">0x211F</param>
+    <param name="subindex">0x0</param>
+    <param name="unit">pulse</param>   <!-- rpm to rad/s is automatically calculated -->
+  </state_interface>
 
 </xacro:macro>
 
