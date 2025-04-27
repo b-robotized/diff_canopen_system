@@ -180,7 +180,7 @@ hardware_interface::CallbackReturn CustomMappingCanopenSystem::on_init(
     }
 
     last_toggled_bit_.emplace(joint.name, false);
-    controller_state_.emplace(joint.name, ControllerStates::DISABLED);
+    controller_state_.emplace(joint.name, ControllerStates::POWER_OFF);
   }
 
   return ret_val;
@@ -253,12 +253,11 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
 
   for (const auto & joint : info_.joints)
   {
-    // TODO(Dr. Denis): Can we here avoid parsing of the node_id?
     node_id_t node_id = 0;
-    if (!states_[joint.name].empty())
+    if (!states_.at(joint.name).empty())
     {
       // TODO(Dr. Denis): Can we here avoid parsing of the node_id?
-      node_id = states_[joint.name].begin()->second.node_id;
+      node_id = states_.at(joint.name).begin()->second.node_id;
     }
     else
     {
@@ -266,52 +265,69 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
       return hardware_interface::return_type::OK;
     }
 
-    ControllerStatusByte status_byte;
-
-    for (const auto & interface : states_[joint.name])
+   try {
+    for (const auto & interface : states_.at(joint.name))
     {
       const auto itf_to_co = interface.second;
       // then, we are manually accessing original data "private" structure members, this is not clean
       // this could be simplified if we would use a map of `rpdo_data` in the CanopenNodeData class, where we would then "register" our data the we have initilized above - just an idea to simplify this! Nevertheless, the first thing would be to move this code to `CanopenSystem` class, as then the things get clearer and simpler
-      const auto data = canopen_data_[node_id].get_rpdo_data(
-        itf_to_co.data->original_data.index_, 
-        itf_to_co.data->original_data.subindex_);
+      const auto data = canopen_data_.at(node_id).get_rpdo_data(
+      itf_to_co.data->original_data.index_, 
+      itf_to_co.data->original_data.subindex_);
       itf_to_co.data->data = scale(data, itf_to_co.scale_factor);
 
       // TODO: add here automatic casting to the data which should be variant from ros2_control
-
-      // BEGIN: Controller specific implementation
-      if (itf_to_co.info.name == "fault")
-      {
-        status_byte.fault = static_cast<bool>(itf_to_co.data->data);
-      }
-      if (itf_to_co.info.name == "power_stage_active")
-      {
-        status_byte.power_stage_active = static_cast<bool>(itf_to_co.data->data);
-
-      }
-
-      if (itf_to_co.info.name == "toggle_bit")
-      {
-        const auto bit = static_cast<bool>(itf_to_co.data->data);
-        if (last_toggled_bit_[joint.name] == bit)
-        {
-          RCLCPP_WARN(kLogger, "Toggle bit is not toggelded!");
-        }
-        last_toggled_bit_[joint.name] = bit;
-      }
-      // END: Controller specific implementation
     }
+    } catch (const std::out_of_range & e)
+  {
+    RCLCPP_FATAL(kLogger, "%s", e.what());
+  }
 
-    // BEGIN: Controller State machine
-    if (status_byte.fault)
+    // BEGIN: Controller specific implementation of state machine
+    if (static_cast<bool>(states_.at(joint.name).at("fault").data->data))
     {
-      controller_state_[joint.name] = ControllerStates::FAULT;
+      controller_state_.at(joint.name) = ControllerStates::FAULT;
+    }
+    else if (static_cast<bool>(states_.at(joint.name).at("safe_stop_active").data->data))
+    {
+      controller_state_.at(joint.name) = ControllerStates::SAFE_STOP;
+    }
+    else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data))
+    {
+      if (static_cast<bool>(states_.at(joint.name).at("main_contactor_status").data->data))
+      {
+      controller_state_.at(joint.name) = ControllerStates::POWER_ON_CONTACTOR;
+      }
+      else
+      {
+      // it seems that hte controller doesn't give status about contactor
+      controller_state_.at(joint.name) = ControllerStates::POWER_ON_CONTACTOR;
+      // controller_state_.at(joint.name) = ControllerStates::POWER_ON;
+      }
+    }
+    else if (!static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data))
+    {
+      if (static_cast<bool>(states_.at(joint.name).at("main_contactor_status").data->data))
+      {
+      controller_state_.at(joint.name) = ControllerStates::POWER_OFF_CONTACTOR;
+      }
+      else
+      {
+      controller_state_.at(joint.name) = ControllerStates::POWER_OFF;
+      }
     }
     else
     {
-      controller_state_[joint.name] = ControllerStates::ENABLED;
+      controller_state_.at(joint.name) = ControllerStates::POWER_OFF;  // make sure to have a clear state set
     }
+
+    const auto bit = static_cast<bool>(states_.at(joint.name).at("toggle_bit").data->data);
+    if (last_toggled_bit_.at(joint.name) == bit)
+    {
+      RCLCPP_WARN(kLogger, "Toggle bit is not toggelded!");
+    }
+    last_toggled_bit_.at(joint.name) = bit;
+    // END: Controller specific implementation    
   }
   return hardware_interface::return_type::OK;
 }
@@ -335,9 +351,9 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
   for (const auto & joint : info_.joints)
   {
     node_id_t node_id = 0;
-    if (!commands_[joint.name].empty())
+    if (!commands_.at(joint.name).empty())
     {
-      node_id = commands_[joint.name].begin()->second.node_id;
+      node_id = commands_.at(joint.name).begin()->second.node_id;
     }
     else
     {
@@ -345,13 +361,72 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
       return hardware_interface::return_type::OK;
     }
 
+    const auto itf_to_co_map = commands_.at(joint.name);
+
     // BEGIN: Custom startup sequence for the motor controller - this should be part of a controller or custom driver
+    switch (controller_state_.at(joint.name))
+    {
+      case ControllerStates::FAULT:
+        RCLCPP_INFO(kLogger, "Controller '%s' is in FAULT state.", joint.name.c_str());
+        itf_to_co_map.at("drive_enable").data->data = false;  // disable
+        itf_to_co_map.at("main_contactor").data->data = false;  // turn off contactor
+        itf_to_co_map.at("break_release").data->data = false;  // activate the break
+        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
 
+        // fault is reset on rising edge, i.e. we should toggle the flag
+        itf_to_co_map.at("reset_fault").data->data = !(static_cast<bool>(itf_to_co_map.at("reset_fault").data->data));
+        break;
 
+      case ControllerStates::SAFE_STOP:
+        RCLCPP_INFO(kLogger, "Controller '%s' is in SAFE_STOP state.", joint.name.c_str());
+        itf_to_co_map.at("break_release").data->data = false;  // activate the break
+        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+        break;
+
+      case ControllerStates::POWER_OFF:
+        RCLCPP_INFO(kLogger, "Controller '%s' is in POWER_OFF state. Attempting to power on.", joint.name.c_str());
+        itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
+        itf_to_co_map.at("main_contactor").data->data = true;  // enable main contactor as there is no feedback
+        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+        break;
+
+      case ControllerStates::POWER_OFF_CONTACTOR:
+        RCLCPP_INFO(kLogger, "Controller '%s' is in POWER_OFF_CONTACTOR state. Activating power stage.", joint.name.c_str());
+        itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
+        itf_to_co_map.at("main_contactor").data->data = true;  // keep contactor on
+        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+        break;
+
+      case ControllerStates::POWER_ON_CONTACTOR:
+        RCLCPP_INFO(kLogger, "Controller '%s' is in POWER_ON_CONTACTOR state. Preparing for operation.", joint.name.c_str());
+        itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
+        itf_to_co_map.at("main_contactor").data->data = true;  // keep contactor on
+        itf_to_co_map.at("break_release").data->data = true;  // release break
+        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+        break;
+
+      case ControllerStates::POWER_ON:
+        RCLCPP_INFO(kLogger, "Controller '%s' is in POWER_ON state. Ready for operation.", joint.name.c_str());
+        itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
+        itf_to_co_map.at("main_contactor").data->data = true;  // enable main contactor
+        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+        break;
+
+      case ControllerStates::POWER_ON_CONTACTOR_BREAK_RELEASE:
+        RCLCPP_INFO(kLogger, "Controller '%s' is in POWER_ON_CONTACTOR_BREAK_RELEASE state. Running normaly.", joint.name.c_str());
+        itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
+        itf_to_co_map.at("main_contactor").data->data = true;  // keep contactor on
+        itf_to_co_map.at("break_release").data->data = true;  // release break
+        break;
+
+      default:
+      RCLCPP_ERROR(kLogger, "Unknown state for controller '%s'.", joint.name.c_str());
+      return hardware_interface::return_type::ERROR;
+    };
     // END: Custom startup sequence for the motor controller - this should be part of a controller or custom driver
 
-    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers[node_id]);
-    for (const auto & interface : commands_[joint.name])
+    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers.at(node_id));
+    for (const auto & interface : commands_.at(joint.name))
     {
       const auto itf_to_co = interface.second;
 

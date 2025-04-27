@@ -39,22 +39,12 @@ struct InterfaceToCanOpen
   double scale_factor = 1.0;
 };
 
-struct ControllerStatusByte
-{
-  bool fault;
-  bool power_stage_active;
-  bool torque_mode;
-  bool main_contactor_status;
-  bool can_enable;
-  bool safe_stop_active;
-};
-
 enum ControllerStates {
-  DISABLED = 0,
-  ENABLED,
-  DISABLED_CONTACTOR,
-  ENABLED_CONTACTOR,
-  ENABLED_CONTACTOR_BREAK_RELEASE,
+  POWER_OFF = 0,
+  POWER_ON,
+  POWER_OFF_CONTACTOR,
+  POWER_ON_CONTACTOR,
+  POWER_ON_CONTACTOR_BREAK_RELEASE,
   FAULT,
   SAFE_STOP,
 };
@@ -85,7 +75,6 @@ private:
 
   // BEGIN: Controller specific
   std::unordered_map<std::string, bool> last_toggled_bit_;
-
   std::unordered_map<std::string, ControllerStates> controller_state_;
   // END: Controller specific
 };

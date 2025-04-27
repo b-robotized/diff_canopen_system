@@ -151,7 +151,7 @@
     <param name="index">0x211A</param>
     <param name="subindex">0x0</param>
   </state_interface>
-  <state_interface name="toogle_bit">
+  <state_interface name="toggle_bit">
     <param name="min">0</param>
     <param name="max">1</param>
     <param name="data_type">bool</param>
