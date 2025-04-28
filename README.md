@@ -100,6 +100,8 @@ The image has end up very big - probably because of log files, as the code is qu
 Feel free to integrate the code from the repositories down to your image if you like.
 Everything is defined correctly and `rosdep` will do the work with dependencies.
 
+**As soon as you enter the Docker, ROS 2 workspace is sourced.**
+
 
 ### Repositories
 ```
