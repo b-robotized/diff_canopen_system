@@ -509,7 +509,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
       case ControllerStates::FAULT:
       {
         RCLCPP_DEBUG(kLogger, "Controller '%s' is in FAULT state.", joint.name.c_str());
-        itf_to_co_map.at("velocity").data->data = 0.0;  // reset velocity
+        // itf_to_co_map.at("velocity").data->data = 0.0;  // reset velocity
 
         // fault is reset on rising edge, i.e. we should toggle the flag
         itf_to_co_map.at("reset_fault").data->data = !(static_cast<bool>(itf_to_co_map.at("reset_fault").data->data));
@@ -534,7 +534,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
           itf_to_co_map.at("main_contactor").data->data = false;  // enable main contactor as there is no feedback
           itf_to_co_map.at("break_release").data->data = false;  // release break
           itf_to_co_map.at("reset_fault").data->data = false;
-          itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+          // itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
           ++init_sequence_.at(joint.name).num_before_power_on;
         }
         else
@@ -556,7 +556,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
         itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
         itf_to_co_map.at("main_contactor").data->data = true;  // keep contactor on
         itf_to_co_map.at("reset_fault").data->data = false;
-        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+        // itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
         break;
       }
 
@@ -569,7 +569,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
           itf_to_co_map.at("main_contactor").data->data = true;  // enable main contactor
           itf_to_co_map.at("break_release").data->data = false;  // release break
           itf_to_co_map.at("reset_fault").data->data = false;
-          itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+          // itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
           ++init_sequence_.at(joint.name).num_before_power_on_contactor;
         }
         else if (init_sequence_.at(joint.name).num_before_power_on_contactor == 7)
@@ -592,7 +592,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
         itf_to_co_map.at("main_contactor").data->data = true;  // keep contactor on
         itf_to_co_map.at("break_release").data->data = true;  // release break
         itf_to_co_map.at("reset_fault").data->data = false;
-        itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
+        // itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
         // reset before contactor counter
         init_sequence_.at(joint.name).num_before_power_on_contactor = 0;
         break;
@@ -634,9 +634,13 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
       itf_to_co.data->data = std::clamp(itf_to_co.data->data, itf_to_co.min, itf_to_co.max);
 
       data_to_transmit->prepare_data();
-      // RCLCPP_INFO(kLogger, "Controller '%s', NodeID: 0x%X; Index: 0x%X; Original Data: %u; Itf data: %f; Interface '%s'",
-      //           joint.name.c_str(), itf_to_co.node_id, itf_to_co.data->original_data.index_, itf_to_co.data->original_data.data_,
-      //           itf_to_co.data->data, itf_name.c_str());
+      if (itf_to_co.info.name == "velocity")
+      {
+        // TODO(Dr. Denis): check if this is correct
+        RCLCPP_INFO(kLogger, "Controller '%s', NodeID: 0x%X; Index: 0x%X; Original Data: %u; Itf data: %f; Interface '%s'",
+                joint.name.c_str(), itf_to_co.node_id, itf_to_co.data->original_data.index_, itf_to_co.data->original_data.data_,
+                itf_to_co.data->data, itf_name.c_str());
+      }
       proxy_driver->tpdo_transmit(data_to_transmit->original_data);
     }
   }
