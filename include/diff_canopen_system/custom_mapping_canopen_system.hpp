@@ -15,6 +15,7 @@
 #ifndef DIFF_CANOPEN_SYSTEM__CUSTOM_MAPPING_CANOPEN_SYSTEM_HPP_
 #define DIFF_CANOPEN_SYSTEM__CUSTOM_MAPPING_CANOPEN_SYSTEM_HPP_
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -37,6 +38,8 @@ struct InterfaceToCanOpen
   node_id_t node_id;
   std::shared_ptr<canopen_ros2_control::Ros2ControlCOData> data;
   double scale_factor = 1.0;
+  double min = std::numeric_limits<double>::lowest();
+  double max = std::numeric_limits<double>::max();
 };
 
 enum ControllerStates {
@@ -47,6 +50,13 @@ enum ControllerStates {
   POWER_ON_CONTACTOR_BREAK_RELEASE,
   FAULT,
   SAFE_STOP,
+};
+
+struct InitSequence 
+{
+  size_t num_before_power_on = 0;
+  size_t num_before_power_on_contactor = 0;
+  bool should_expect_answer = false;
 };
 
 class CustomMappingCanopenSystem : public canopen_ros2_control::CanopenSystem
@@ -71,11 +81,12 @@ private:
   std::unordered_map<std::string, std::unordered_map<std::string, InterfaceToCanOpen>> states_;
   std::unordered_map<std::string, std::unordered_map<std::string, InterfaceToCanOpen>> commands_;
 
-  uint32_t scale(const double data, const double scale_factor);
+  double scale(const double data, const double scale_factor);
 
   // BEGIN: Controller specific
   std::unordered_map<std::string, bool> last_toggled_bit_;
   std::unordered_map<std::string, ControllerStates> controller_state_;
+  std::unordered_map<std::string, InitSequence> init_sequence_;
   // END: Controller specific
 };
 

@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 100  # Hz
+    update_rate: 50  # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -39,8 +39,8 @@ diff_base_controller:
 
     position_feedback: False
 
-    wheel_separation: 0.325  # 650 mm
-    wheel_radius: 0.135      # 270 mm
+    wheel_separation: 0.700
+    wheel_radius: 0.0865
 
     wheel_separation_multiplier: 1.0
     left_wheel_radius_multiplier: 1.0
@@ -57,15 +57,15 @@ diff_base_controller:
 
     cmd_vel_timeout: 0.5
     #publish_limited_velocity: true
-    use_stamped_vel: false
+    use_stamped_vel: true
     #velocity_rolling_window_size: 10
 
     # Velocity and acceleration limits
     # Whenever a min_* is unspecified, default to -max_*
     linear.x.has_velocity_limits: true
     linear.x.has_acceleration_limits: true
-    linear.x.max_velocity: 1.1
-    linear.x.min_velocity: -1.1
+    linear.x.max_velocity: 1.5
+    linear.x.min_velocity: -1.5
     linear.x.max_acceleration: 1.0
     linear.x.max_jerk: NAN
     linear.x.min_jerk: NAN

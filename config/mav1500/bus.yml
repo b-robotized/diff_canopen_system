@@ -7,7 +7,8 @@ master:
   package: "canopen_master_driver"
   baudrate: 250
   reset_communication: false
-  sync_period: 10000
+  sync_period: 20000
+  namespace: "/"
 
   # Custom added from debugging
   # product_code: 0x01C9C44A
@@ -23,7 +24,7 @@ defaults:
     period: 1000 # in milliseconds
 
   reset_communication: false
-
+  namespace: "/"
 
 nodes:
   left_wheel:
