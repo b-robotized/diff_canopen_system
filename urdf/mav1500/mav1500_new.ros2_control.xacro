@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+<xacro:property name="gear_ratio" value="8.12"/>
+
 <xacro:macro name="mav1500_ros2_control" params="
               name
               prefix
@@ -99,7 +101,7 @@
     <param name="index">0x2110</param>
     <param name="subindex">0x0</param>
     <param name="unit">rpm</param>
-    <param name="to_hw_scaling_factor">${inverse_factor * 1.0}</param>
+    <param name="to_hw_scaling_factor">${inverse_factor * 1.0 * gear_ratio}</param>
   </command_interface>
   <command_interface name="torque" data_type="int16_t">
     <param name="data_type">int16_t</param>
@@ -177,7 +179,7 @@
     <param name="index">0x211D</param>
     <param name="subindex">0x0</param>
     <param name="unit">rpm</param>
-    <param name="from_hw_scaling_factor">${inverse_factor * 1.0}</param>
+    <param name="from_hw_scaling_factor">${inverse_factor * 1.0 * gear_ratio}</param>
   </state_interface>
   <state_interface name="effort" data_type="int16_t">
     <param name="data_type">int16_t</param>

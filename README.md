@@ -10,7 +10,7 @@ Those might be useful for debugging.
 
 ### Send command to the controller
 ```
-ros2 topic pub /diff_base_controller/cmd_vel geometry_msgs/msg/TwistStamped "
+ros2 topic pub -r 10 /diff_base_controller/cmd_vel geometry_msgs/msg/TwistStamped "
 header:
  stamp:
   sec: 0
