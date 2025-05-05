@@ -90,6 +90,7 @@ private:
   std::unordered_map<std::string, ControllerStates> controller_state_;
   std::unordered_map<std::string, InitSequence> init_sequence_;
   // END: Controller specific
+  rclcpp::Clock::SharedPtr clock_ = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
 };
 
 }  // namespace custom_mapping_canopen_system

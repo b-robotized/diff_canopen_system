@@ -493,7 +493,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
     }
     else
     {
-      RCLCPP_WARN(kLogger, "Controller '%s' (0x%X): no new data (bit is not toggeled).", joint.name.c_str(), node_id);
+      RCLCPP_WARN_THROTTLE(kLogger, *clock_, 10000, "Controller '%s' (0x%X): no new data (bit is not toggeled).", joint.name.c_str(), node_id);
     }
     last_toggled_bit_.at(joint.name) = bit;
     // END: Controller specific implementation
