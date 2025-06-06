@@ -331,6 +331,7 @@ hardware_interface::CallbackReturn CustomMappingCanopenSystem::on_activate(const
     controller_state_.at(joint.name) = ControllerStates::POWER_OFF;
     last_toggled_bit_.at(joint.name) = false;
 
+    const node_id_t node_id = static_cast<node_id_t>(std::stoi(joint.parameters.at("node_id"), nullptr, 0));
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers.at(node_id));
     proxy_driver->start_node_nmt_command();
   }
@@ -349,7 +350,12 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
     if (ret_val != hardware_interface::return_type::OK)
     {
       RCLCPP_ERROR(kLogger, "Error has hapend in underlaying CanopenSystem::read call. See above for more details.");
-      return ret_val;
+      // Don't stop on the erorr but try to reinitialize the system
+      for (const auto & joint : info_.joints)
+      {
+        controller_state_.at(joint.name) = ControllerStates::FAULT;
+      }
+      return hardware_interface::return_type::OK
     }
   }
 
@@ -526,13 +532,6 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
 
     auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers.at(node_id));
 
-    if (canopen_data_.at(node_id).nmt_state.original_state != ros2_canopen::NmtState::START)
-    {
-      RCLCPP_WARN(kLogger, "NodeID: 0x%X is not in START state. Skipping write.", node_id);
-      // proxy_driver->start_node_nmt_command();
-      continue;
-    }
-
     const auto itf_to_co_map = commands_.at(joint.name);
 
     // BEGIN: Custom startup sequence for the motor controller - this should be part of a controller or custom driver
@@ -541,6 +540,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
       case ControllerStates::FAULT:
       {
         RCLCPP_DEBUG(kLogger, "Controller '%s' is in FAULT state.", joint.name.c_str());
+        proxy_driver->start_node_nmt_command();
         // itf_to_co_map.at("velocity").data->data = 0.0;  // reset velocity
 
         // fault is reset on rising edge, i.e. we should toggle the flag
@@ -562,6 +562,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
         if (init_sequence_.at(joint.name).num_before_power_on < 3)
         {
           RCLCPP_DEBUG(kLogger, "Controller '%s' is in POWER_OFF state. Iteration %zu. Attempting to power on.", joint.name.c_str(), init_sequence_.at(joint.name).num_before_power_on);
+          proxy_driver->start_node_nmt_command();
           itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
           itf_to_co_map.at("main_contactor").data->data = false;  // enable main contactor as there is no feedback
           itf_to_co_map.at("break_release").data->data = false;  // release break
@@ -597,6 +598,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
         if (init_sequence_.at(joint.name).num_before_power_on_contactor < 7)
         {
           RCLCPP_INFO(kLogger, "Controller '%s' is in POWER_ON state. Iteration %zu. Activating contactor.", joint.name.c_str(), init_sequence_.at(joint.name).num_before_power_on_contactor);
+          proxy_driver->start_node_nmt_command();
           itf_to_co_map.at("drive_enable").data->data = true;  // enable drive
           itf_to_co_map.at("main_contactor").data->data = true;  // enable main contactor
           itf_to_co_map.at("break_release").data->data = false;  // release break
@@ -639,7 +641,6 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
         itf_to_co_map.at("reset_fault").data->data = false;
         break;
       }
-
       default:
       {
         RCLCPP_ERROR(kLogger, "Unknown state for controller '%s'.", joint.name.c_str());
