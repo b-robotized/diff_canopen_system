@@ -52,7 +52,7 @@ enum ControllerStates {
   SAFE_STOP,
 };
 
-struct InitSequence 
+struct InitSequence
 {
   size_t num_before_power_on = 0;
   size_t num_before_power_on_contactor = 0;
@@ -70,6 +70,8 @@ public:
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+
+  hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
 
   hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 

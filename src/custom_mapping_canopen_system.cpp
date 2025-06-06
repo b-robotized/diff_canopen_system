@@ -177,9 +177,9 @@ hardware_interface::CallbackReturn CustomMappingCanopenSystem::on_init(
       catch (const std::out_of_range & e)
       {} // we just ignore this
       // END: remove when getting data_type is fixed
-      try 
+      try
       {
-        itf_to_canopen.data->original_data = 
+        itf_to_canopen.data->original_data =
           ros2_canopen::COData{
             static_cast<uint16_t>(std::stoi(interface.parameters.at("index"), nullptr, 0)),  // cast from any base
             static_cast<uint8_t>(std::stoi(interface.parameters.at("subindex"), nullptr, 0)),  // cast from any base
@@ -229,7 +229,7 @@ hardware_interface::CallbackReturn CustomMappingCanopenSystem::on_init(
           return CallbackReturn::ERROR;
         }
       }
-      
+
       // check other parameters
       {
         const auto it = std::find_if(
@@ -270,7 +270,7 @@ std::vector<hardware_interface::StateInterface> CustomMappingCanopenSystem::expo
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   // add CANOpen interfaces
-  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() &&
       info_.hardware_parameters["enable_canopen_interfaces"] == "true")
   {
     state_interfaces = CanopenSystem::export_state_interfaces();
@@ -281,8 +281,8 @@ std::vector<hardware_interface::StateInterface> CustomMappingCanopenSystem::expo
     for (const auto & interface : states_[joint.name])
     {
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        joint.name, 
-        interface.second.info.name, 
+        joint.name,
+        interface.second.info.name,
         &interface.second.data->data));
     }
   }
@@ -295,7 +295,7 @@ std::vector<hardware_interface::CommandInterface> CustomMappingCanopenSystem::ex
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
   // add CANOpen interfaces
-  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() &&
       info_.hardware_parameters["enable_canopen_interfaces"] == "true")
   {
     command_interfaces = CanopenSystem::export_command_interfaces();
@@ -306,8 +306,8 @@ std::vector<hardware_interface::CommandInterface> CustomMappingCanopenSystem::ex
     for (const auto & interface : commands_[joint.name])
     {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        joint.name, 
-        interface.second.info.name, 
+        joint.name,
+        interface.second.info.name,
         &interface.second.data->data));
 
     }
@@ -315,10 +315,33 @@ std::vector<hardware_interface::CommandInterface> CustomMappingCanopenSystem::ex
   return command_interfaces;
 }
 
+hardware_interface::CallbackReturn CustomMappingCanopenSystem::on_activate(const rclcpp_lifecycle::State & previous_state)
+{
+  auto ret_val = CanopenSystem::on_activate(previous_state);
+  if (ret_val != hardware_interface::CallbackReturn::SUCCESS)
+  {
+    return ret_val;
+  }
+
+  auto drivers = device_container_->get_registered_drivers();
+
+  // reset controller state
+  for (const auto & joint : info_.joints)
+  {
+    controller_state_.at(joint.name) = ControllerStates::POWER_OFF;
+    last_toggled_bit_.at(joint.name) = false;
+
+    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers.at(node_id));
+    proxy_driver->start_node_nmt_command();
+  }
+
+  return ret_val;
+}
+
 
 hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() &&
       info_.hardware_parameters["enable_canopen_interfaces"] == "true")
   {
     auto ret_val = CanopenSystem::read(time, period);
@@ -353,7 +376,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
       const auto itf_to_co = interface.second;
       // this could be simplified if we would use a map of `rpdo_data` in the CanopenNodeData class, where we would then "register" our data the we have initilized above - just an idea to simplify this! Nevertheless, the first thing would be to move this code to `CanopenSystem` class, as then the things get clearer and simpler
       itf_to_co.data->original_data.data_ = canopen_data_.at(node_id).get_rpdo_raw_data(
-      itf_to_co.data->original_data.index_, 
+      itf_to_co.data->original_data.index_,
       itf_to_co.data->original_data.subindex_);
       const auto dat = std::static_pointer_cast<canopen_ros2_control::RORos2ControlCOData>(itf_to_co.data);
       dat->prepare_data();
@@ -396,7 +419,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
         }
         controller_state_.at(joint.name) = ControllerStates::SAFE_STOP;
       }
-      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) && 
+      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) &&
                static_cast<bool>(states_.at(joint.name).at("main_contactor_status").data->data))
       {
         if (controller_state_.at(joint.name) != ControllerStates::POWER_ON_CONTACTOR)
@@ -405,7 +428,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
         }
         controller_state_.at(joint.name) = ControllerStates::POWER_ON_CONTACTOR;
       }
-      else if (!static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) && 
+      else if (!static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) &&
                static_cast<bool>(states_.at(joint.name).at("main_contactor_status").data->data))
       {
         // it seems that the gives bit sequence: "2" --> "1" - this is build with below states
@@ -420,9 +443,9 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
         }
         controller_state_.at(joint.name) = ControllerStates::POWER_OFF_CONTACTOR;
       }
-      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) && 
+      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) &&
                !static_cast<bool>(states_.at(joint.name).at("main_contactor_status").data->data) &&
-               (controller_state_.at(joint.name) == ControllerStates::POWER_OFF_CONTACTOR || 
+               (controller_state_.at(joint.name) == ControllerStates::POWER_OFF_CONTACTOR ||
                 controller_state_.at(joint.name) == ControllerStates::FAULT))
       {
         if (controller_state_.at(joint.name) != ControllerStates::POWER_ON_CONTACTOR)
@@ -431,9 +454,9 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
         }
         controller_state_.at(joint.name) = ControllerStates::POWER_ON_CONTACTOR;
       }
-      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) && 
+      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) &&
                !static_cast<bool>(states_.at(joint.name).at("main_contactor_status").data->data) &&
-               (controller_state_.at(joint.name) == ControllerStates::POWER_ON_CONTACTOR || 
+               (controller_state_.at(joint.name) == ControllerStates::POWER_ON_CONTACTOR ||
                 controller_state_.at(joint.name) == ControllerStates::POWER_ON_CONTACTOR_BREAK_RELEASE))  // keep it in running state
       {
         if (controller_state_.at(joint.name) != ControllerStates::POWER_ON_CONTACTOR_BREAK_RELEASE)
@@ -442,9 +465,9 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
         }
         controller_state_.at(joint.name) = ControllerStates::POWER_ON_CONTACTOR_BREAK_RELEASE;
       }
-      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) && 
+      else if (static_cast<bool>(states_.at(joint.name).at("power_stage_active").data->data) &&
                !static_cast<bool>(states_.at(joint.name).at("main_contactor_status").data->data) &&
-               (controller_state_.at(joint.name) != ControllerStates::POWER_OFF_CONTACTOR || 
+               (controller_state_.at(joint.name) != ControllerStates::POWER_OFF_CONTACTOR ||
                 controller_state_.at(joint.name) != ControllerStates::POWER_ON_CONTACTOR_BREAK_RELEASE))
       {
         if (controller_state_.at(joint.name) != ControllerStates::POWER_ON)
@@ -467,14 +490,14 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
       RCLCPP_WARN(kLogger, "Controller '%s' (0x%X): no new data (bit is not toggeled).", joint.name.c_str(), node_id);
     }
     last_toggled_bit_.at(joint.name) = bit;
-    // END: Controller specific implementation    
+    // END: Controller specific implementation
   }
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() && 
+  if (info_.hardware_parameters.find("enable_canopen_interfaces") != info_.hardware_parameters.end() &&
       info_.hardware_parameters["enable_canopen_interfaces"] == "true")
   {
     auto ret_val = CanopenSystem::write(time, period);
@@ -501,6 +524,15 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
       return hardware_interface::return_type::OK;
     }
 
+    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers.at(node_id));
+
+    if (canopen_data_.at(node_id).nmt_state.original_state != ros2_canopen::NmtState::START)
+    {
+      RCLCPP_WARN(kLogger, "NodeID: 0x%X is not in START state. Skipping write.", node_id);
+      // proxy_driver->start_node_nmt_command();
+      continue;
+    }
+
     const auto itf_to_co_map = commands_.at(joint.name);
 
     // BEGIN: Custom startup sequence for the motor controller - this should be part of a controller or custom driver
@@ -520,7 +552,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
       {
         RCLCPP_DEBUG(kLogger, "Controller '%s' is in SAFE_STOP state.", joint.name.c_str());
         itf_to_co_map.at("break_release").data->data = false;  // activate the break
-        itf_to_co_map.at("reset_fault").data->data = false;        
+        itf_to_co_map.at("reset_fault").data->data = false;
         // itf_to_co_map.at("velocity").data->data = 0.0; // reset velocity
         break;
       }
@@ -616,7 +648,6 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
     };
     // END: Custom startup sequence for the motor controller - this should be part of a controller or custom driver
 
-    auto proxy_driver = std::static_pointer_cast<ros2_canopen::ProxyDriver>(drivers.at(node_id));
     for (const auto & [itf_name, itf_to_co] : commands_.at(joint.name))
     {
       if (itf_to_co.data->data == std::numeric_limits<double>::quiet_NaN())
@@ -628,7 +659,7 @@ hardware_interface::return_type CustomMappingCanopenSystem::write(const rclcpp::
         // skip if data is not yet set
         continue;
       }
-      
+
       const auto data_to_transmit = std::static_pointer_cast<canopen_ros2_control::WORos2ControlCoData>(itf_to_co.data);
       itf_to_co.data->data = scale(itf_to_co.data->data, itf_to_co.scale_factor);
       itf_to_co.data->data = std::clamp(itf_to_co.data->data, itf_to_co.min, itf_to_co.max);
