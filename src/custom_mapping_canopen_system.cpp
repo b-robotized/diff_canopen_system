@@ -350,12 +350,12 @@ hardware_interface::return_type CustomMappingCanopenSystem::read(const rclcpp::T
     if (ret_val != hardware_interface::return_type::OK)
     {
       RCLCPP_ERROR(kLogger, "Error has hapend in underlaying CanopenSystem::read call. See above for more details.");
-      // Don't stop on the erorr but try to reinitialize the system
+      // Don't stop on the error but try to reinitialize the system
       for (const auto & joint : info_.joints)
       {
         controller_state_.at(joint.name) = ControllerStates::FAULT;
       }
-      return hardware_interface::return_type::OK
+      return hardware_interface::return_type::OK;
     }
   }
 
