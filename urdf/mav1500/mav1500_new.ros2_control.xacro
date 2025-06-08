@@ -6,19 +6,27 @@
 <xacro:macro name="mav1500_ros2_control" params="
               name
               prefix
+              mock_hardware
+              mock_sensor_commands
               bus_config
               master_config
               can_interface_name
               master_bin">
 
-  <ros2_control name="${name}" type="system">
+  <ros2_control name="${name}_CANOPEN" type="system">
     <hardware>
-      <plugin>custom_mapping_canopen_system/CustomMappingCanopenSystem</plugin>
-      <param name="bus_config">${bus_config}</param>
-      <param name="master_config">${master_config}</param>
-      <param name="can_interface_name">${can_interface_name}</param>
-      <param name="master_bin">"${master_bin}"</param>
-      <param name="enable_canopen_interfaces">true</param>
+        <xacro:if value="${mock_hardware}">
+            <plugin>mock_components/GenericSystem</plugin>
+            <param name="mock_sensor_commands">${mock_sensor_commands}</param>
+        </xacro:if>
+        <xacro:unless value="${mock_hardware}">
+            <plugin>custom_mapping_canopen_system/CustomMappingCanopenSystem</plugin>
+            <param name="bus_config">${bus_config}</param>
+            <param name="master_config">${master_config}</param>
+            <param name="can_interface_name">${can_interface_name}</param>
+            <param name="master_bin">"${master_bin}"</param>
+            <param name="enable_canopen_interfaces">true</param>
+        </xacro:unless>
     </hardware>
     <joint name="${prefix}left_wheel">
       <param name="node_id">0x1E</param>  <!--30-->
@@ -29,8 +37,32 @@
       <param name="node_id">0x1F</param>  <!--31-->
       <xacro:dana_tm4_interfaces_mapping inverse_direction="false"/>
     </joint>
+
+    <sensor name="left_wheel">
+        <xacro:sensor_mapping/>
+    </sensor>
+    <sensor name="right_wheel">
+        <xacro:sensor_mapping/>
+    </sensor>
   </ros2_control>
 
+</xacro:macro>
+
+<xacro:macro name="sensor_mapping" params="inverse_direction:=false">
+    <state_interface name="battery_voltage" data_type="uint16_t">
+        <param name="data_type">uint16_t</param>
+        <param name="index">0x2124</param>
+        <param name="subindex">0x0</param>
+        <param name="unit">V</param>
+        <param name="from_hw_scaling_factor">0.01</param>
+    </state_interface>
+    <state_interface name="battery_current" data_type="int16_t">
+        <param name="data_type">int16_t</param>
+        <param name="index">0x2127</param>
+        <param name="subindex">0x0</param>
+        <param name="unit">A</param>
+        <param name="from_hw_scaling_factor">0.1</param>
+    </state_interface>
 </xacro:macro>
 
 <xacro:macro name="dana_tm4_interfaces_mapping" params="inverse_direction:=false">
@@ -46,58 +78,42 @@
   <!-- Control Word -->
   <command_interface name="drive_enable" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2100</param>
     <param name="subindex">0x0</param>
   </command_interface>
   <command_interface name="main_contactor" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2101</param>
     <param name="subindex">0x0</param>
   </command_interface>
   <command_interface name="break_release" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2102</param>
     <param name="subindex">0x0</param>
   </command_interface>
   <command_interface name="safe_stop" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2107</param>
     <param name="subindex">0x0</param>
   </command_interface>
   <command_interface name="control_mode" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2108</param>
     <param name="subindex">0x0</param>
   </command_interface>
   <command_interface name="speed_control" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2109</param>
     <param name="subindex">0x0</param>
   </command_interface>
   <command_interface name="reset_fault" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x210F</param>
     <param name="subindex">0x0</param>
   </command_interface>
 
   <command_interface name="velocity" data_type="int16_t">
     <param name="data_type">int16_t</param>
-    <param name="min">-8000</param>
-    <param name="max">8000</param>
     <param name="index">0x2110</param>
     <param name="subindex">0x0</param>
     <param name="unit">rpm</param>
@@ -105,8 +121,6 @@
   </command_interface>
   <command_interface name="torque" data_type="int16_t">
     <param name="data_type">int16_t</param>
-    <param name="min">-32768</param>
-    <param name="max">32767</param>
     <param name="index">0x2111</param>
     <param name="subindex">0x0</param>
     <param name="unit">Nm</param>
@@ -115,58 +129,42 @@
 
   <state_interface name="power_stage_active" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2114</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="fault" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2115</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="torque_mode" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2116</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="main_contactor_status" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2117</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="can_enable" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x2118</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="safe_stop_active" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x211A</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="toggle_bit" data_type="bool">
     <param name="data_type">bool</param>
-    <param name="min">0</param>
-    <param name="max">1</param>
     <param name="index">0x211B</param>
     <param name="subindex">0x0</param>
   </state_interface>
 
   <state_interface name="load" data_type="int8_t">
     <param name="data_type">int8_t</param>
-    <param name="min">-100</param>
-    <param name="max">100</param>
     <param name="index">0x211C</param>
     <param name="subindex">0x0</param>
     <param name="unit">%</param>
@@ -174,8 +172,6 @@
   </state_interface>
   <state_interface name="velocity" data_type="int16_t">
     <param name="data_type">int16_t</param>
-    <param name="min">-10000</param>
-    <param name="max">10000</param>
     <param name="index">0x211D</param>
     <param name="subindex">0x0</param>
     <param name="unit">rpm</param>
@@ -183,8 +179,6 @@
   </state_interface>
   <state_interface name="effort" data_type="int16_t">
     <param name="data_type">int16_t</param>
-    <param name="min">-32767</param>
-    <param name="max">32767</param>
     <param name="index">0x211E</param>
     <param name="subindex">0x0</param>
     <param name="unit">Nm</param>
@@ -192,8 +186,6 @@
   </state_interface>
   <state_interface name="encoder_pulse_counter" data_type="int16_t">
     <param name="data_type">int16_t</param>
-    <param name="min">-32768</param>
-    <param name="max">32767</param>
     <param name="index">0x211F</param>
     <param name="subindex">0x0</param>
     <param name="unit">pulse</param>
@@ -201,47 +193,29 @@
 
   <state_interface name="fault_warning_code" data_type="uint16_t">
     <param name="data_type">uint16_t</param>
-    <param name="min">0</param>
-    <param name="max">9999</param>
     <param name="index">0x2120</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="BDI_level" data_type="uint8_t">
     <param name="data_type">uint8_t</param>
-    <param name="min">0</param>
-    <param name="max">10</param>
     <param name="index">0x2121</param>
     <param name="subindex">0x0</param>
   </state_interface>
   <state_interface name="inverter_temperature" data_type="int8_t">
     <param name="data_type">int8_t</param>
-    <param name="min">-60</param>
-    <param name="max">100</param>
     <param name="index">0x2122</param>
     <param name="subindex">0x0</param>
     <param name="unit">°C</param>
   </state_interface>
   <state_interface name="motor_temperature" data_type="int16_t">
     <param name="data_type">int16_t</param>
-    <param name="min">-50</param>
-    <param name="max">200</param>
     <param name="index">0x2123</param>
     <param name="subindex">0x0</param>
   </state_interface>
-  <state_interface name="battery_voltage" data_type="uint16_t">
-    <param name="data_type">uint16_t</param>
-    <param name="min">0</param>
-    <param name="max">65000</param>
-    <param name="index">0x2124</param>
-    <param name="subindex">0x0</param>
-    <param name="unit">V</param>
-    <param name="from_hw_scaling_factor">0.01</param>
-  </state_interface>
+  
 
   <state_interface name="motor_phase_current" data_type="uint16_t">
     <param name="data_type">uint16_t</param>
-    <param name="min">0</param>
-    <param name="max">29000</param>
     <param name="index">0x2126</param>
     <param name="subindex">0x0</param>
     <param name="unit">A</param>
@@ -249,21 +223,10 @@
   </state_interface>
   <state_interface name="motor_voltage" data_type="uint16_t">
     <param name="data_type">uint16_t</param>
-    <param name="min">0</param>
-    <param name="max">15000</param>
     <param name="index">0x2126</param>
     <param name="subindex">0x0</param>
     <param name="unit">V</param>
     <param name="from_hw_scaling_factor">0.01</param>
-  </state_interface>
-  <state_interface name="battery_current" data_type="int16_t">
-    <param name="data_type">int16_t</param>
-    <param name="min">-32768</param>
-    <param name="max">32767</param>
-    <param name="index">0x2127</param>
-    <param name="subindex">0x0</param>
-    <param name="unit">A</param>
-    <param name="from_hw_scaling_factor">0.1</param>
   </state_interface>
   
 </xacro:macro>

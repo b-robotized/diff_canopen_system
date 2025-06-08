@@ -13,14 +13,22 @@
 
     <!-- ros2 control include -->
     <xacro:include filename="$(find diff_canopen_system)/urdf/mav1500/mav1500_new.ros2_control.xacro"/>
+    <xacro:include filename="$(find diff_canopen_system)/urdf/mav1500/mav1500_plc.ros2_control.xacro"/>
 
     <xacro:mav1500_ros2_control
       name="$(arg name)"
       prefix="$(arg prefix)"
+      mock_hardware="true"
+      mock_sensor_commands="true"
       bus_config="$(arg bus_config)"
       master_config="$(arg master_config)"
       can_interface_name="$(arg can_interface_name)"
       master_bin="$(arg master_bin)"
+    />
+
+    <xacro:mav1500_plc_ros2_control
+      name="$(arg name)"
+      prefix="$(arg prefix)"
     />
 
     <link name="$(arg prefix)base_link"/>

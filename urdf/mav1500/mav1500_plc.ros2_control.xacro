@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:macro name="command_interface_PLC" params="name initial_value:='' PLC_symbol PLC_type n_elements:=1 index:=''">
+        <command_interface name="${name}">
+            <xacro:if value="${initial_value != ''}">
+                <param name="initial_value">${initial_value}</param>
+            </xacro:if>
+            <param name="PLC_symbol">${PLC_symbol}</param>
+            <param name="PLC_type">${PLC_type}</param>
+            <param name="n_elements">${n_elements}</param>
+            <xacro:if value="${index != ''}">
+                <param name="index">${index}</param>
+            </xacro:if>
+        </command_interface>
+    </xacro:macro>
+
+<xacro:macro name="state_interface_PLC" params="name PLC_symbol PLC_type n_elements:=1 index:=''">
+    <state_interface name="${name}_PLC">
+        <param name="PLC_symbol">${PLC_symbol}</param>
+        <param name="PLC_type">${PLC_type}</param>
+        <param name="n_elements">${n_elements}</param>
+        <xacro:if value="${index != ''}">
+            <param name="index">${index}</param>
+        </xacro:if>
+    </state_interface>
+</xacro:macro>
+
+<xacro:macro name="mav1500_plc_ros2_control" params="
+              name
+              prefix">
+
+    <ros2_control name="${name}" type="system">
+        <hardware>
+            <plugin>mock_components/GenericSystem</plugin>
+            <param name="mock_sensor_commands">true</param>
+        </hardware>
+        <!--
+        <gpio name="blep">
+            <xacro:command_interface_PLC name="ManualJogging" PLC_symbol="MAIN.bManualJogging" PLC_type="BOOL" initial_value="1"/>
+            <xacro:command_interface_PLC name="GoToID" PLC_symbol="MAIN.goToID" PLC_type="UDINT" initial_value="5"/>
+        </gpio>
+        -->
+
+        <sensor name="blop">
+            <xacro:state_interface_PLC name="fieldViolation" PLC_symbol="MAIN.bStatusError" PLC_type="BOOL"/>
+            <xacro:state_interface_PLC name="eStopManual" PLC_symbol="MAIN.BatteryVoltage" PLC_type="REAL"/>
+            <xacro:state_interface_PLC name="eStopRemote" PLC_symbol="MAIN.BatteryVoltage" PLC_type="REAL"/>
+        </sensor>
+
+    </ros2_control>
+
+</xacro:macro>
+
+</robot>
