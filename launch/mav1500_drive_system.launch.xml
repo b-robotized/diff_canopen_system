@@ -11,7 +11,7 @@
     <arg name="bus_config_directory" default="config/mav1500" description="Path within the package to bus configuration and master configuration file (*.dcf)" />
     <arg name="bus_config_file" default="bus.yml" description="Path to bus configuration." />
     <arg name="master_config_file" default="master.dcf" description="Path to master configuration file (*.dcf)" />
-    <arg name="can_interface_name" default="can0" description="Interface name for can" />
+    <arg name="can_interface_name" default="vcan0" description="Interface name for can" />
 
     <arg name="simulation" default="false" description="Simulation mode." />
     <group if="$(var simulation)">
@@ -33,6 +33,7 @@
     <node pkg="controller_manager" exec="spawner" args="joint_state_broadcaster --controller-manager /controller_manager" />
     <node pkg="controller_manager" exec="spawner" args="diff_base_controller -c /controller_manager" />
     <node pkg="controller_manager" exec="spawner" args="left_wheel_controller -c /controller_manager" />
+    <node pkg="controller_manager" exec="spawner" args="battery_state_broadcaster -c /controller_manager" />
     <node pkg="controller_manager" exec="spawner" args="right_wheel_controller -c /controller_manager" />
 
     <group if="$(var simulation)">

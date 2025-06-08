@@ -17,6 +17,33 @@ controller_manager:
     right_wheel_controller:
       type: canopen_ros2_controllers/CanopenProxyController
 
+    
+    battery_state_broadcaster:
+      type: battery_state_broadcaster/BatteryStateBroadcaster
+
+
+battery_state_broadcaster:
+  ros__parameters:
+    state_joints: ["left_wheel", "right_wheel"]
+    interfaces:
+      left_wheel:
+        battery_voltage: true
+        battery_current: false
+        battery_charge: false
+        battery_percentage: false
+        battery_power_supply_status: false
+        battery_power_supply_health: false
+        battery_present: false
+      right_wheel:
+        battery_voltage: true
+        battery_current: false
+        battery_charge: false
+        battery_percentage: false
+        battery_power_supply_status: false
+        battery_power_supply_health: false
+        battery_present: false
+
+
 
 left_wheel_controller:
   ros__parameters:

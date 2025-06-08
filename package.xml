@@ -31,6 +31,7 @@
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>diff_drive_controller</exec_depend>
   <exec_depend>forward_command_controller</exec_depend>
+  <exec_depend>battery_state_broadcaster</exec_depend>
   <exec_depend>ros2controlcli</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
