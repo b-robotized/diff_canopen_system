@@ -42,7 +42,7 @@
         </gpio>
         -->
 
-        <sensor name="blop">
+        <sensor name="PLC_sensor">
             <xacro:state_interface_PLC name="fieldViolation" PLC_symbol="MAIN.bStatusError" PLC_type="BOOL"/>
             <xacro:state_interface_PLC name="eStopManual" PLC_symbol="MAIN.BatteryVoltage" PLC_type="REAL"/>
             <xacro:state_interface_PLC name="eStopRemote" PLC_symbol="MAIN.BatteryVoltage" PLC_type="REAL"/>

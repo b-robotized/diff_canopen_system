@@ -43,8 +43,6 @@ battery_state_broadcaster:
         battery_power_supply_health: false
         battery_present: false
 
-
-
 left_wheel_controller:
   ros__parameters:
     joint: left_wheel

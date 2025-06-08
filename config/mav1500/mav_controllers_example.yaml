@@ -1,10 +1,28 @@
 
 controller_manager:
   ros__parameters:
-    update_rate: 20  # Hz
+      update_rate: 20  # Hz
 
-    battery_state_broadcaster:
-      type: battery_state_broadcaster/BatteryStateBroadcaster
+      battery_state_sensor_mock_right_wheel:
+        type: forward_command_controller/MultiInterfaceForwardCommandController
+      battery_state_sensor_mock_left_wheel:
+        type: forward_command_controller/MultiInterfaceForwardCommandController
+      battery_state_broadcaster:
+        type: battery_state_broadcaster/BatteryStateBroadcaster
+
+battery_state_sensor_mock_right_wheel:
+  ros__parameters:
+    joint: left_wheel
+    interface_names:
+      - battery_voltage
+      - battery_current
+
+battery_state_sensor_mock_left_wheel:
+  ros__parameters:
+    joint: right_wheel
+    interface_names:
+      - battery_voltage
+      - battery_current
 
 battery_state_broadcaster:
   ros__parameters:
@@ -12,7 +30,7 @@ battery_state_broadcaster:
     interfaces:
       left_wheel:
         battery_voltage: true
-        battery_current: false
+        battery_current: true
         battery_charge: false
         battery_percentage: false
         battery_power_supply_status: false
@@ -20,7 +38,7 @@ battery_state_broadcaster:
         battery_present: false
       right_wheel:
         battery_voltage: true
-        battery_current: false
+        battery_current: true
         battery_charge: false
         battery_percentage: false
         battery_power_supply_status: false

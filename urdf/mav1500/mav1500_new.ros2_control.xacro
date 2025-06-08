@@ -55,6 +55,7 @@
         <param name="subindex">0x0</param>
         <param name="unit">V</param>
         <param name="from_hw_scaling_factor">0.01</param>
+        <param name="initial_value">15.0</param>
     </state_interface>
     <state_interface name="battery_current" data_type="int16_t">
         <param name="data_type">int16_t</param>
@@ -62,6 +63,7 @@
         <param name="subindex">0x0</param>
         <param name="unit">A</param>
         <param name="from_hw_scaling_factor">0.1</param>
+        <param name="initial_value">25.0</param>
     </state_interface>
 </xacro:macro>
 
