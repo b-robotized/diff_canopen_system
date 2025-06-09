@@ -76,16 +76,16 @@
         <param name="initial_value">3.0</param>
     </state_interface>
     <state_interface name="emcy/manufacturer_error_code2">
-        <param name="initial_value">3.0</param>
+        <param name="initial_value">4.0</param>
     </state_interface>
     <state_interface name="emcy/manufacturer_error_code3">
-        <param name="initial_value">3.0</param>
+        <param name="initial_value">5.0</param>
     </state_interface>
     <state_interface name="emcy/manufacturer_error_code4">
-        <param name="initial_value">3.0</param>
+        <param name="initial_value">6.0</param>
     </state_interface>
     <state_interface name="emcy/manufacturer_error_code5">
-        <param name="initial_value">3.0</param>
+        <param name="initial_value">7.0</param>
     </state_interface>
 </xacro:macro>
 
