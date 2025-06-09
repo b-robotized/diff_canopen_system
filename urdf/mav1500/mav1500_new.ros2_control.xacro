@@ -65,6 +65,28 @@
         <param name="from_hw_scaling_factor">0.1</param>
         <param name="initial_value">25.0</param>
     </state_interface>
+
+    <state_interface name="emcy/error_code">
+        <param name="initial_value">1.0</param>
+    </state_interface>
+    <state_interface name="emcy/error_register">
+        <param name="initial_value">2.0</param>
+    </state_interface>
+    <state_interface name="emcy/manufacturer_error_code1">
+        <param name="initial_value">3.0</param>
+    </state_interface>
+    <state_interface name="emcy/manufacturer_error_code2">
+        <param name="initial_value">3.0</param>
+    </state_interface>
+    <state_interface name="emcy/manufacturer_error_code3">
+        <param name="initial_value">3.0</param>
+    </state_interface>
+    <state_interface name="emcy/manufacturer_error_code4">
+        <param name="initial_value">3.0</param>
+    </state_interface>
+    <state_interface name="emcy/manufacturer_error_code5">
+        <param name="initial_value">3.0</param>
+    </state_interface>
 </xacro:macro>
 
 <xacro:macro name="dana_tm4_interfaces_mapping" params="inverse_direction:=false">

@@ -72,3 +72,30 @@ vda5050_safety_state_broadcaster_mock:
       - eStopManual
       - eStopRemote
       - eStopAutoack
+
+node_error_broadcaster:
+  ros__parameters:
+    interfaces:
+      - right_wheel/emcy/error_code
+      - right_wheel/emcy/error_register
+      - right_wheel/emcy/manufacturer_error_code1
+      - right_wheel/emcy/manufacturer_error_code2
+      - right_wheel/emcy/manufacturer_error_code3
+      - right_wheel/emcy/manufacturer_error_code4
+      - right_wheel/emcy/manufacturer_error_code5
+    severity: LEVEL_WARNING
+    id: 1
+    source: right_wheel_emcy
+    type: default_type # what is this?
+
+node_error_broadcaster_mock:
+  ros__parameters:
+    joint: right_wheel
+    interface_names: 
+      - emcy/error_code
+      - emcy/error_register
+      - emcy/manufacturer_error_code1
+      - emcy/manufacturer_error_code2
+      - emcy/manufacturer_error_code3
+      - emcy/manufacturer_error_code4
+      - emcy/manufacturer_error_code5
