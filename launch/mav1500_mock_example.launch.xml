@@ -30,16 +30,16 @@
         <param from="$(find-pkg-share $(var ros2_control_config_package))/$(var ros2_control_config_directory)/$(var ros2_control_config_file).yaml"/>
     </node>
 
-    <!--
-    <node pkg="controller_manager" exec="spawner" args="joint_state_broadcaster -c /controller_manager" />
-    <node pkg="controller_manager" exec="spawner" args="diff_base_controller -c /controller_manager" />
-    <node pkg="controller_manager" exec="spawner" args="left_wheel_controller -c /controller_manager" />
-    <node pkg="controller_manager" exec="spawner" args="right_wheel_controller -c /controller_manager" />-->
+    <!-- BROADCASTERS -->
     <node pkg="controller_manager" exec="spawner" args="battery_state_broadcaster -c /controller_manager" />
-
+    <node pkg="controller_manager" exec="spawner" args="vda5050_safety_state_broadcaster -c /controller_manager" />
+    <node pkg="controller_manager" exec="spawner" args="node_error_broadcaster -c /controller_manager" />
+    
+    <!-- MOCK SENSOR COMMANDS -->
     <node pkg="controller_manager" exec="spawner" args="battery_state_sensor_mock_left_wheel -c /controller_manager" />
     <node pkg="controller_manager" exec="spawner" args="battery_state_sensor_mock_right_wheel -c /controller_manager" />
-    
+    <node pkg="controller_manager" exec="spawner" args="vda5050_safety_state_broadcaster_mock -c /controller_manager" />
+    <node pkg="controller_manager" exec="spawner" args="node_error_broadcaster_mock -c /controller_manager" />
     
 
 </launch>

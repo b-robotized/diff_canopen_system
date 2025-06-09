@@ -16,7 +16,7 @@
     </xacro:macro>
 
 <xacro:macro name="state_interface_PLC" params="name PLC_symbol PLC_type n_elements:=1 index:=''">
-    <state_interface name="${name}_PLC">
+    <state_interface name="${name}">
         <param name="PLC_symbol">${PLC_symbol}</param>
         <param name="PLC_type">${PLC_type}</param>
         <param name="n_elements">${n_elements}</param>
@@ -42,10 +42,18 @@
         </gpio>
         -->
 
-        <sensor name="PLC_sensor">
+        <sensor name="PLC_sensor1">
             <xacro:state_interface_PLC name="fieldViolation" PLC_symbol="MAIN.bStatusError" PLC_type="BOOL"/>
-            <xacro:state_interface_PLC name="eStopManual" PLC_symbol="MAIN.BatteryVoltage" PLC_type="REAL"/>
-            <xacro:state_interface_PLC name="eStopRemote" PLC_symbol="MAIN.BatteryVoltage" PLC_type="REAL"/>
+            <xacro:state_interface_PLC name="eStopManual" PLC_symbol="MAIN.BatteryVoltage" PLC_type="BOOL"/>
+            <xacro:state_interface_PLC name="eStopRemote" PLC_symbol="MAIN.BatteryVoltage" PLC_type="BOOL"/>
+            <xacro:state_interface_PLC name="eStopAutoack" PLC_symbol="MAIN.BatteryVoltage" PLC_type="BOOL"/>
+        </sensor>
+
+        <sensor name="PLC_sensor2">
+            <xacro:state_interface_PLC name="fieldViolation" PLC_symbol="MAIN.bStatusError" PLC_type="BOOL"/>
+            <xacro:state_interface_PLC name="eStopManual" PLC_symbol="MAIN.BatteryVoltage" PLC_type="BOOL"/>
+            <xacro:state_interface_PLC name="eStopRemote" PLC_symbol="MAIN.BatteryVoltage" PLC_type="BOOL"/>
+            <xacro:state_interface_PLC name="eStopAutoack" PLC_symbol="MAIN.BatteryVoltage" PLC_type="BOOL"/>
         </sensor>
 
     </ros2_control>
